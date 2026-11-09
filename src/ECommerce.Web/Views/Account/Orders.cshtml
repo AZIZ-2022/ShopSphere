@@ -1,0 +1,47 @@
+@model IReadOnlyList<ECommerce.Application.Orders.OrderListItemDto>
+@inject ECommerce.Web.Infrastructure.IMoneyFormatter Money
+@{
+    ViewData["Title"] = "My Orders";
+}
+
+<div class="page">
+    <div class="container-x">
+        <h1 class="mb-4">My Account</h1>
+        <div class="account-layout">
+            <partial name="_AccountNav" />
+            <div>
+                <h2 class="text-section-title mb-3">Order history</h2>
+                @if (Model.Count == 0)
+                {
+                    <div class="panel">
+                        <div class="empty-state-cell">
+                            <icon name="orders" class="icon--lg" />
+                            <span>You haven't placed any orders yet.</span>
+                            <a class="btn btn-primary btn-sm mt-2" href="/">Start shopping</a>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="order-list">
+                        @foreach (var o in Model)
+                        {
+                            <a class="panel order-row" asp-action="OrderDetail" asp-route-orderNumber="@o.OrderNumber">
+                                <div class="order-row__top">
+                                    <strong>@o.OrderNumber</strong>
+                                    <span class="order-status @ECommerce.Web.Infrastructure.OrderUi.StatusClass(o.Status)">@o.Status</span>
+                                </div>
+                                <div class="order-row__meta">
+                                    <span>@o.PlacedAt.ToString("MMM d, yyyy")</span>
+                                    <span>@o.ItemCount item(s)</span>
+                                    <span>@ECommerce.Web.Infrastructure.OrderUi.PaymentMethodLabel(o.PaymentMethod)</span>
+                                    <strong>@Money.FormatIn(o.TotalAmount, o.CurrencyCode, o.ExchangeRate)</strong>
+                                </div>
+                            </a>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

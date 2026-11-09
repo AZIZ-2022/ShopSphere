@@ -1,0 +1,95 @@
+@using ECommerce.Application.Home
+@model HomeSectionEditModel
+@{
+    var isFeatureStrip = Model.Key == HomeSectionKeys.FeatureStrip;
+    var isHeroSlider = Model.Key == HomeSectionKeys.HeroSlider;
+    var showSubtitle = Model.Key is HomeSectionKeys.FeaturedCategories or HomeSectionKeys.FeaturedProducts
+        or HomeSectionKeys.NewArrivals or HomeSectionKeys.PromoBanner or HomeSectionKeys.BestSellers or HomeSectionKeys.Newsletter;
+    var showButtonLink = Model.Key is HomeSectionKeys.Deals or HomeSectionKeys.FeaturedProducts
+        or HomeSectionKeys.NewArrivals or HomeSectionKeys.PromoBanner or HomeSectionKeys.BestSellers;
+
+    // Pad to 4 rows so the feature-strip editor always shows a full, fixed set of slots.
+    var featureItems = Model.FeatureItems.ToList();
+    while (isFeatureStrip && featureItems.Count < 4)
+        featureItems.Add(new FeatureStripItem());
+
+    var iconChoices = new[] { "truck", "undo", "shield-check", "messages", "check", "map-pin", "dollar", "warning" };
+}
+
+<div class="admin-page-head">
+    <h1 class="text-page-title">@Model.Label</h1>
+    <a class="btn btn-ghost" asp-action="Index"><icon name="arrow-left" class="icon--sm" /> Back to sections</a>
+</div>
+
+<form asp-action="Edit" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="Key" />
+    <input type="hidden" asp-for="Label" />
+    <input type="hidden" asp-for="DisplayOrder" />
+    <input type="hidden" asp-for="IsVisible" />
+
+    <div class="panel">
+        @if (isHeroSlider)
+        {
+            <p class="text-muted-sm mb-0">Hero slides are managed on the <a asp-controller="Sliders" asp-action="Index">Sliders</a> page. Use this page only to reorder or hide the whole section.</p>
+        }
+        else if (isFeatureStrip)
+        {
+            <p class="text-eyebrow mb-3">Icon items</p>
+            @for (var i = 0; i < featureItems.Count; i++)
+            {
+                <div class="row g-2 mb-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label">Icon</label>
+                        <select name="FeatureItems[@i].Icon" class="form-select">
+                            @foreach (var ic in iconChoices)
+                            {
+                                <option value="@ic" selected="@(featureItems[i].Icon == ic)">@ic</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Title</label>
+                        <input name="FeatureItems[@i].Title" value="@featureItems[i].Title" class="form-control" maxlength="60" />
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label">Subtitle</label>
+                        <input name="FeatureItems[@i].Subtitle" value="@featureItems[i].Subtitle" class="form-control" maxlength="100" />
+                    </div>
+                </div>
+            }
+            <p class="field-hint">Leave a title blank to drop that slot.</p>
+        }
+        else
+        {
+            <div class="mb-3">
+                <label class="form-label">Title</label>
+                <input asp-for="Title" class="form-control" maxlength="200" />
+            </div>
+            @if (showSubtitle)
+            {
+                <div class="mb-3">
+                    <label class="form-label">Subtitle</label>
+                    <input asp-for="Subtitle" class="form-control" maxlength="400" />
+                </div>
+            }
+            @if (showButtonLink)
+            {
+                <div class="row g-3">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Button text</label>
+                        <input asp-for="ButtonText" class="form-control" maxlength="60" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Link URL</label>
+                        <input asp-for="LinkUrl" class="form-control" placeholder="/deals" maxlength="400" />
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    <button type="submit" class="btn btn-primary"><icon name="save" class="icon--sm" /> Save</button>
+    <a class="btn btn-ghost" asp-action="Index"><icon name="close" class="icon--sm" /> Cancel</a>
+</form>

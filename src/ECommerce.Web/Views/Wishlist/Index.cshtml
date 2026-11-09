@@ -1,0 +1,56 @@
+@model IReadOnlyList<ECommerce.Application.Catalog.ProductListItemDto>
+@inject ECommerce.Web.Infrastructure.IMoneyFormatter Money
+@{
+    ViewData["Title"] = "My Wishlist";
+}
+
+<div class="page">
+    <div class="container-x">
+        <h1 class="mb-4">My Wishlist</h1>
+
+        @if (Model.Count == 0)
+        {
+            <div class="state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+                <h3>Your wishlist is empty</h3>
+                <p>Tap the heart on any product to save it here.</p>
+                <a class="btn btn-primary" href="/">Browse products</a>
+            </div>
+        }
+        else
+        {
+            <div class="wishlist-grid">
+                @foreach (var p in Model)
+                {
+                    <div class="wishlist-item">
+                        <a class="wishlist-item__media" href="/p/@p.Slug">
+                            @if (!string.IsNullOrEmpty(p.MainImageUrl)) { <img src="@p.MainImageUrl" alt="@p.Name" /> }
+                        </a>
+                        <div class="wishlist-item__body">
+                            <a class="wishlist-item__name" href="/p/@p.Slug">@p.Name</a>
+                            <div class="product-card__price">
+                                <span class="price-now">@Money.Format(p.EffectivePrice)</span>
+                                @if (p.DiscountPercent > 0)
+                                {
+                                    <span class="price-was">@Money.Format(p.Price)</span>
+                                }
+                            </div>
+                            <div class="wishlist-item__actions">
+                                <form asp-controller="Wishlist" asp-action="MoveToCart" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="productId" value="@p.Id" />
+                                    <button type="submit" class="btn btn-primary btn-sm" @(p.InStock ? "" : "disabled")>Move to cart</button>
+                                </form>
+                                <form asp-controller="Wishlist" asp-action="Remove" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="productId" value="@p.Id" />
+                                    <button type="submit" class="btn btn-ghost btn-sm">Remove</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>

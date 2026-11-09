@@ -1,0 +1,101 @@
+@model ECommerce.Application.Orders.OrderDto
+@using ECommerce.Domain.Enums
+@using ECommerce.Web.Infrastructure
+@{
+    var nextStatuses = OrderUi.NextStatuses(Model.Status);
+}
+
+<div class="admin-page-head">
+    <div>
+        <h1 class="text-page-title mb-1">@Model.OrderNumber</h1>
+        <span class="text-muted-sm">Placed @Model.PlacedAt.ToString("MMMM d, yyyy · HH:mm") · @Model.CustomerName (@Model.CustomerEmail)</span>
+    </div>
+    <a class="btn btn-ghost" asp-action="Index"><icon name="arrow-left" class="icon--sm" /> All orders</a>
+</div>
+
+<div class="order-detail-grid">
+    <div>
+        <div class="panel">
+            <h2 class="text-card-title mb-3">Items</h2>
+            <partial name="~/Views/Shared/_OrderSummary.cshtml" model="Model" />
+        </div>
+        <div class="panel">
+            <h2 class="text-card-title mb-3">Timeline</h2>
+            <partial name="~/Views/Shared/_OrderTimeline.cshtml" model="Model" />
+        </div>
+    </div>
+
+    <div>
+        <div class="panel">
+            <h2 class="text-card-title mb-3">Status</h2>
+            <p><span class="order-status @OrderUi.StatusClass(Model.Status)">@Model.Status</span></p>
+            @if (nextStatuses.Count > 0)
+            {
+                <form asp-action="Status" asp-route-id="@Model.Id" method="post">
+                    @Html.AntiForgeryToken()
+                    <select name="status" class="form-select mb-2">
+                        @foreach (var s in nextStatuses)
+                        {
+                            <option value="@s">Mark as @s</option>
+                        }
+                    </select>
+                    <input name="note" class="form-control mb-2" placeholder="Note (optional)" />
+                    <button type="submit" class="btn btn-primary btn-sm w-100"><icon name="check" class="icon--sm" /> Update status</button>
+                </form>
+            }
+            else
+            {
+                <p class="text-muted small mb-0">No further status changes available.</p>
+            }
+        </div>
+
+        <div class="panel">
+            <h2 class="text-card-title mb-3">Payment</h2>
+            <p class="mb-1">@OrderUi.PaymentMethodLabel(Model.PaymentMethod)</p>
+            <p><span class="order-status @OrderUi.PaymentClass(Model.PaymentStatus)">@Model.PaymentStatus</span></p>
+
+            @if (Model.Payments.Count > 0)
+            {
+                <table class="admin-table admin-table--tight mb-3">
+                    <thead><tr><th>Status</th><th>Txn</th><th>When</th></tr></thead>
+                    <tbody>
+                    @foreach (var p in Model.Payments)
+                    {
+                        <tr>
+                            <td><span class="order-status @OrderUi.PaymentClass(p.Status)">@p.Status</span></td>
+                            <td class="text-muted small">@(p.TransactionId ?? "—")<br />@(p.GatewayResponse)</td>
+                            <td class="text-muted small">@((p.PaidAt ?? p.CreatedAt).ToString("MMM d, HH:mm"))</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            }
+
+            <form asp-action="Payment" asp-route-id="@Model.Id" method="post" class="d-flex gap-2 flex-wrap">
+                @Html.AntiForgeryToken()
+                @foreach (var ps in new[] { PaymentStatus.Paid, PaymentStatus.Pending, PaymentStatus.Refunded, PaymentStatus.Failed })
+                {
+                    @if (ps != Model.PaymentStatus)
+                    {
+                        <button type="submit" name="status" value="@ps" class="btn btn-ghost btn-sm">Mark @ps</button>
+                    }
+                }
+            </form>
+        </div>
+
+        <div class="panel">
+            <h2 class="text-card-title mb-3">Delivery address</h2>
+            <p class="mb-1"><strong>@Model.ShippingName</strong></p>
+            <p class="mb-1 text-muted small">@Model.ShippingPhone</p>
+            <p class="mb-0 text-muted small">@Model.ShippingOneLine</p>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Model.CustomerNote))
+        {
+            <div class="panel">
+                <h2 class="text-card-title mb-3">Customer note</h2>
+                <p class="mb-0 text-muted small">@Model.CustomerNote</p>
+            </div>
+        }
+    </div>
+</div>

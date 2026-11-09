@@ -1,0 +1,15 @@
+@model ECommerce.Application.Orders.OrderDto
+
+<ol class="timeline">
+    @foreach (var h in Model.History)
+    {
+        <li class="timeline__item">
+            <span class="timeline__dot @ECommerce.Web.Infrastructure.OrderUi.StatusClass(h.Status)"></span>
+            <div>
+                <strong>@h.Status</strong>
+                <time>@h.ChangedAt.ToString("MMM d, yyyy · HH:mm")</time>
+                @if (!string.IsNullOrWhiteSpace(h.Note)) { <p>@h.Note</p> }
+            </div>
+        </li>
+    }
+</ol>

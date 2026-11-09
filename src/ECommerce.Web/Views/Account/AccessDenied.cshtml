@@ -1,0 +1,16 @@
+@{
+    ViewData["Title"] = "Access denied";
+}
+
+<div class="page">
+    <div class="container-x auth-wrap">
+        <div class="auth-card text-center">
+            <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="var(--c-accent)" stroke-width="2" style="margin:0 auto var(--sp-3);">
+                <circle cx="12" cy="12" r="10" /><line x1="4.9" y1="4.9" x2="19.1" y2="19.1" />
+            </svg>
+            <h1>Access denied</h1>
+            <p class="lede">You don't have permission to view this page.</p>
+            <a class="btn btn-primary" asp-controller="Home" asp-action="Index">Back to home</a>
+        </div>
+    </div>
+</div>

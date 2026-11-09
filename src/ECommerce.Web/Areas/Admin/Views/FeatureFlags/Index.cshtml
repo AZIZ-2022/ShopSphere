@@ -1,0 +1,39 @@
+@model IReadOnlyList<ECommerce.Application.Common.Features.FeatureFlagListItem>
+
+<div class="admin-page-head">
+    <h1 class="text-page-title">Features</h1>
+</div>
+
+<p class="text-muted-sm mb-3">Turn optional storefront capabilities on or off. Disabling a feature hides its UI everywhere and blocks its backend endpoints too.</p>
+
+<div class="panel p-0">
+    <table class="admin-table">
+        <thead><tr><th>Feature</th><th>Description</th><th class="actions"></th></tr></thead>
+        <tbody>
+        @foreach (var f in Model)
+        {
+            <tr>
+                <td><strong>@f.Label</strong></td>
+                <td class="text-muted small">@f.Description</td>
+                <td class="actions">
+                    <form asp-action="Toggle" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="key" value="@f.Key" />
+                        <input type="hidden" name="enabled" value="@((!f.IsEnabled).ToString().ToLower())" />
+                        <button class="btn btn-ghost btn-sm" type="submit">
+                            @if (f.IsEnabled)
+                            {
+                                <span class="badge-status on">Enabled</span>
+                            }
+                            else
+                            {
+                                <span class="badge-status off">Disabled</span>
+                            }
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

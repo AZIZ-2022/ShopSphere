@@ -1,0 +1,61 @@
+@model ECommerce.Web.Models.Account.RegisterViewModel
+@{
+    ViewData["Title"] = "Create account";
+}
+
+<div class="page">
+    <div class="container-x auth-wrap">
+        <div class="auth-card">
+            <h1>Create your account</h1>
+            <p class="lede">It only takes a minute. No email confirmation required.</p>
+
+            <form asp-action="Register" method="post">
+                <input type="hidden" asp-for="ReturnUrl" />
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 px-3 small" role="alert"></div>
+
+                <div class="mb-3">
+                    <label asp-for="FullName" class="form-label"></label>
+                    <input asp-for="FullName" class="form-control" autocomplete="name" autofocus />
+                    <span asp-validation-for="FullName" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-control" autocomplete="email" />
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="PhoneNumber" class="form-label"></label>
+                    <input asp-for="PhoneNumber" class="form-control" autocomplete="tel" />
+                    <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-sm-6">
+                        <label asp-for="Password" class="form-label"></label>
+                        <input asp-for="Password" class="form-control" autocomplete="new-password" />
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                    </div>
+                    <div class="col-sm-6">
+                        <label asp-for="ConfirmPassword" class="form-label"></label>
+                        <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" />
+                        <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <p class="text-muted small">Password needs 6+ characters with upper &amp; lower case, a digit and a symbol.</p>
+
+                <button type="submit" class="btn btn-primary w-100">Create account</button>
+            </form>
+
+            <p class="auth-alt">
+                Already have an account? <a asp-action="Login" asp-route-returnUrl="@Model.ReturnUrl">Log in</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,52 @@
+@model IReadOnlyList<ECommerce.Application.Orders.AddressDto>
+@{
+    ViewData["Title"] = "Address Book";
+}
+
+<div class="page">
+    <div class="container-x">
+        <h1 class="mb-4">My Account</h1>
+        <div class="account-layout">
+            <partial name="_AccountNav" />
+            <div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="text-section-title mb-0">Saved addresses</h2>
+                    <a class="btn btn-primary btn-sm" asp-action="AddAddress"><icon name="plus" class="icon--sm" /> Add address</a>
+                </div>
+
+                @if (Model.Count == 0)
+                {
+                    <div class="panel"><div class="empty-state-cell"><icon name="map-pin" class="icon--lg" /><span>You have no saved addresses yet.</span></div></div>
+                }
+                else
+                {
+                    <div class="addr-grid">
+                        @foreach (var a in Model)
+                        {
+                            <div class="panel addr-card @(a.IsDefault ? "is-default" : "")">
+                                @if (a.IsDefault) { <span class="badge-pill badge-pill--new">Default</span> }
+                                <strong>@a.FullName</strong>
+                                <div class="text-muted small">@a.Phone</div>
+                                <p class="mb-2">@a.OneLine</p>
+                                <div class="addr-card__actions">
+                                    <a class="btn btn-ghost btn-sm" asp-action="EditAddress" asp-route-id="@a.Id"><icon name="edit" class="icon--sm" /> Edit</a>
+                                    @if (!a.IsDefault)
+                                    {
+                                        <form asp-action="SetDefaultAddress" asp-route-id="@a.Id" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button class="btn btn-ghost btn-sm" type="submit"><icon name="check" class="icon--sm" /> Make default</button>
+                                        </form>
+                                    }
+                                    <form asp-action="DeleteAddress" asp-route-id="@a.Id" method="post" class="d-inline" onsubmit="return confirm('Delete this address?');">
+                                        @Html.AntiForgeryToken()
+                                        <button class="btn btn-danger-ghost btn-sm" type="submit"><icon name="delete" class="icon--sm" /> Delete</button>
+                                    </form>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

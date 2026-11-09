@@ -1,0 +1,32 @@
+@model ECommerce.Web.Models.Catalog.PagerModel
+@{
+    if (Model.TotalPages <= 1) { return; }
+
+    var start = Math.Max(1, Model.Page - 2);
+    var end = Math.Min(Model.TotalPages, start + 4);
+    start = Math.Max(1, end - 4);
+}
+<nav class="pager" aria-label="Pagination">
+    <a class="pager__link @(Model.Page <= 1 ? "is-disabled" : "")"
+       href="@(Model.Page <= 1 ? "#" : Model.UrlForPage(Model.Page - 1))" aria-label="Previous">‹</a>
+
+    @if (start > 1)
+    {
+        <a class="pager__link" href="@Model.UrlForPage(1)">1</a>
+        @if (start > 2) { <span class="pager__gap">…</span> }
+    }
+
+    @for (var p = start; p <= end; p++)
+    {
+        <a class="pager__link @(p == Model.Page ? "is-active" : "")" href="@Model.UrlForPage(p)">@p</a>
+    }
+
+    @if (end < Model.TotalPages)
+    {
+        @if (end < Model.TotalPages - 1) { <span class="pager__gap">…</span> }
+        <a class="pager__link" href="@Model.UrlForPage(Model.TotalPages)">@Model.TotalPages</a>
+    }
+
+    <a class="pager__link @(Model.Page >= Model.TotalPages ? "is-disabled" : "")"
+       href="@(Model.Page >= Model.TotalPages ? "#" : Model.UrlForPage(Model.Page + 1))" aria-label="Next">›</a>
+</nav>

@@ -1,0 +1,162 @@
+@inject ECommerce.Application.Common.Interfaces.ISiteSettingsService SiteSettings
+@{
+    var settings = await SiteSettings.GetAsync();
+    var pageTitle = ViewData["Title"] as string ?? "Admin";
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    var isDashboard = string.Equals(currentController, "Dashboard", StringComparison.OrdinalIgnoreCase);
+
+    (string Label, string Icon) SectionFor(string controller) => controller.ToLowerInvariant() switch
+    {
+        "categories" or "brands" or "products" => ("Catalog", "products"),
+        "orders" or "coupons" or "users" => ("Sales", "orders"),
+        "homesections" or "sliders" or "testimonials" or "cmspages" => ("Content", "sliders"),
+        "subscribers" or "messages" => ("Engagement", "messages"),
+        "settings" or "featureflags" or "configaudit" => ("System", "settings"),
+        _ => ("Overview", "dashboard"),
+    };
+    var navSection = SectionFor(currentController);
+
+    var userName = User.Identity?.Name;
+    var userInitial = string.IsNullOrEmpty(userName) ? "?" : userName[..1].ToUpperInvariant();
+
+    var primary = ThemeCatalog.IsValidHex(settings.ThemePrimaryColor) ? settings.ThemePrimaryColor : "#2563eb";
+    var accent = ThemeCatalog.IsValidHex(settings.ThemeAccentColor) ? settings.ThemeAccentColor : "#ef4444";
+    var favicon = string.IsNullOrWhiteSpace(settings.FaviconUrl) ? Url.Content("~/favicon.ico") : settings.FaviconUrl;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@pageTitle · @settings.SiteName Admin</title>
+    <link rel="icon" href="@favicon" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="@ThemeCatalog.GoogleFontsHref(settings.ThemeFontFamily)" rel="stylesheet" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/ECommerce.Web.styles.css" asp-append-version="true" />
+    <style>
+        :root {
+            --font-sans: @Html.Raw(ThemeCatalog.FontStack(settings.ThemeFontFamily));
+            --c-primary: @primary;
+            --c-primary-dark: @ThemeCatalog.Darken(primary);
+            --c-primary-soft: @ThemeCatalog.Soften(primary);
+            --c-accent: @accent;
+            --c-accent-dark: @ThemeCatalog.Darken(accent);
+            --radius-sm: @ThemeCatalog.ButtonRadius(settings.ThemeButtonStyle);
+        }
+    </style>
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body class="admin-body">
+    <header class="admin-topbar">
+        <button class="admin-nav-toggle" type="button" data-admin-sidebar-toggle
+                aria-controls="adminSidebar" aria-expanded="false" aria-label="Toggle navigation">
+            <icon name="menu" />
+        </button>
+        @{ var hasLogo = !string.IsNullOrWhiteSpace(settings.LogoUrl) && settings.LogoUrl != "/images/logo.svg"; }
+        <a class="brand text-white" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
+            @if (hasLogo)
+            {
+                <img class="brand__logo" src="@settings.LogoUrl" alt="@settings.SiteName" />
+            }
+            else
+            {
+                <span class="brand__mark">@settings.SiteName[0]</span>
+            }
+            <span>@settings.SiteName <small class="opacity-75">Admin</small></span>
+        </a>
+        <div class="ms-auto d-flex align-items-center gap-3">
+            <a class="admin-topbar__link" asp-controller="Home" asp-action="Index" target="_blank">
+                <icon name="external-link" class="icon--sm" /> View store
+            </a>
+            <div class="admin-user">
+                <span class="admin-user__avatar">@userInitial</span>
+                <span class="admin-user__name">@userName</span>
+            </div>
+            <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
+                @Html.AntiForgeryToken()
+                <button class="btn btn-sm btn-outline-light" type="submit">
+                    <icon name="logout" class="icon--sm" /> Log out
+                </button>
+            </form>
+        </div>
+    </header>
+
+    <div class="admin-shell">
+        <aside class="admin-sidebar" id="adminSidebar">
+            <nav class="admin-nav">
+                <div class="admin-nav__group">
+                    <p class="text-eyebrow admin-nav__label">Overview</p>
+                    <a class="nav-link" asp-area="Admin" asp-controller="Dashboard" asp-action="Index" active-when-controller="Dashboard" active-class="active"><icon name="dashboard" /> Dashboard</a>
+                </div>
+                <div class="admin-nav__group">
+                    <p class="text-eyebrow admin-nav__label">Catalog</p>
+                    <a class="nav-link" asp-area="Admin" asp-controller="Categories" asp-action="Index" active-when-controller="Categories" active-class="active"><icon name="categories" /> Categories</a>
+                    <a class="nav-link" asp-area="Admin" asp-controller="Brands" asp-action="Index" active-when-controller="Brands" active-class="active"><icon name="brands" /> Brands</a>
+                    <a class="nav-link" asp-area="Admin" asp-controller="Products" asp-action="Index" active-when-controller="Products" active-class="active"><icon name="products" /> Products</a>
+                </div>
+                <div class="admin-nav__group">
+                    <p class="text-eyebrow admin-nav__label">Sales</p>
+                    <a class="nav-link" asp-area="Admin" asp-controller="Orders" asp-action="Index" active-when-controller="Orders" active-class="active"><icon name="orders" /> Orders</a>
+                    <a class="nav-link" asp-area="Admin" asp-controller="Coupons" asp-action="Index" active-when-controller="Coupons" active-class="active"><icon name="dollar" /> Coupons</a>
+                    <a class="nav-link" asp-area="Admin" asp-controller="Users" asp-action="Index" active-when-controller="Users" active-class="active"><icon name="users" /> Users</a>
+                </div>
+                <div class="admin-nav__group">
+                    <p class="text-eyebrow admin-nav__label">Content</p>
+                    <a class="nav-link" asp-area="Admin" asp-controller="HomeSections" asp-action="Index" active-when-controller="HomeSections" active-class="active"><icon name="dashboard" /> Homepage sections</a>
+                    <a class="nav-link" asp-area="Admin" asp-controller="Sliders" asp-action="Index" active-when-controller="Sliders" active-class="active"><icon name="sliders" /> Sliders</a>
+                    <a class="nav-link" asp-area="Admin" asp-controller="Testimonials" asp-action="Index" active-when-controller="Testimonials" active-class="active"><icon name="testimonials" /> Testimonials</a>
+                    <a class="nav-link" asp-area="Admin" asp-controller="CmsPages" asp-action="Index" active-when-controller="CmsPages" active-class="active"><icon name="categories" /> Pages</a>
+                </div>
+                <div class="admin-nav__group">
+                    <p class="text-eyebrow admin-nav__label">Engagement</p>
+                    <a class="nav-link" asp-area="Admin" asp-controller="Subscribers" asp-action="Index" active-when-controller="Subscribers" active-class="active"><icon name="subscribers" /> Subscribers</a>
+                    <a class="nav-link" asp-area="Admin" asp-controller="Messages" asp-action="Index" active-when-controller="Messages" active-class="active"><icon name="messages" /> Messages</a>
+                </div>
+                <div class="admin-nav__group">
+                    <p class="text-eyebrow admin-nav__label">System</p>
+                    <a class="nav-link" asp-area="Admin" asp-controller="Settings" asp-action="Index" active-when-controller="Settings" active-class="active"><icon name="settings" /> Settings</a>
+                    <a class="nav-link" asp-area="Admin" asp-controller="FeatureFlags" asp-action="Index" active-when-controller="FeatureFlags" active-class="active"><icon name="check" /> Features</a>
+                    <a class="nav-link" asp-area="Admin" asp-controller="ConfigAudit" asp-action="Index" active-when-controller="ConfigAudit" active-class="active"><icon name="undo" /> Change history</a>
+                </div>
+            </nav>
+        </aside>
+        <div class="admin-sidebar-backdrop" data-admin-sidebar-backdrop></div>
+
+        <main class="admin-main">
+            <nav class="admin-breadcrumb" aria-label="Breadcrumb">
+                <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">Admin</a>
+                @if (!isDashboard)
+                {
+                    <icon name="chevron-right" class="icon--sm" />
+                    <span>@navSection.Label</span>
+                }
+                <icon name="chevron-right" class="icon--sm" />
+                <span class="is-current">@pageTitle</span>
+            </nav>
+
+            @if (TempData["Flash"] is string f && !string.IsNullOrWhiteSpace(f))
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @f<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+            @if (TempData["FlashError"] is string fe && !string.IsNullOrWhiteSpace(fe))
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @fe<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+            @RenderBody()
+        </main>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/admin.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

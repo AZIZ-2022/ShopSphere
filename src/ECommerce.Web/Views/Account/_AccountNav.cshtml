@@ -1,0 +1,18 @@
+@inject ECommerce.Application.Common.Features.IFeatureFlagService Features
+@{
+    var action = ViewContext.RouteData.Values["action"]?.ToString();
+    var wishlistOn = await Features.IsEnabledAsync(ECommerce.Application.Common.Features.FeatureFlagKeys.Wishlist);
+}
+<nav class="account-nav">
+    <a asp-action="Profile" class="@(action == "Profile" ? "is-active" : "")">Profile</a>
+    <a asp-action="Orders" class="@(action == "Orders" ? "is-active" : "")">My Orders</a>
+    <a asp-action="Addresses" class="@(action == "Addresses" ? "is-active" : "")">Addresses</a>
+    @if (wishlistOn)
+    {
+        <a asp-controller="Wishlist" asp-action="Index">Wishlist</a>
+    }
+    <form asp-action="Logout" method="post" class="m-0">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="account-nav-btn danger" style="all:unset;display:block;padding:.6rem .8rem;border-radius:8px;color:var(--c-accent);font-weight:600;font-size:.9rem;cursor:pointer;width:100%;">Log out</button>
+    </form>
+</nav>

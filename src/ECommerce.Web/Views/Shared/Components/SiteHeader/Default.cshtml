@@ -1,0 +1,179 @@
+@model ECommerce.Web.ViewComponents.SiteHeaderViewModel
+@inject ECommerce.Application.Common.Features.IFeatureFlagService Features
+@{
+    var s = Model.Settings;
+    var isAuth = User?.Identity?.IsAuthenticated ?? false;
+    var isAdmin = User?.IsInRole("Admin") ?? false;
+    var userName = User?.FindFirst("full_name")?.Value ?? User?.Identity?.Name;
+    // "/images/logo.svg" is the pre-upgrade placeholder default — treat it the same as "not set".
+    var hasLogo = !string.IsNullOrWhiteSpace(s.LogoUrl) && s.LogoUrl != "/images/logo.svg";
+    var wishlistOn = await Features.IsEnabledAsync(ECommerce.Application.Common.Features.FeatureFlagKeys.Wishlist);
+}
+
+<div class="topbar">
+    <div class="container-x">
+        <div class="topbar__msg">
+            @if (s.FreeShippingThreshold > 0)
+            {
+                <span>Free shipping on orders over @s.BaseCurrency @s.FreeShippingThreshold.ToString("0")</span>
+            }
+            else
+            {
+                <span>@s.Tagline</span>
+            }
+        </div>
+        <div class="topbar__links">
+            <a asp-controller="Order" asp-action="Track">Track Order</a>
+            <a asp-controller="Home" asp-action="Contact">Help</a>
+            @if (!string.IsNullOrEmpty(s.ContactPhone))
+            {
+                <a href="tel:@s.ContactPhone.Replace(" ", "")">@s.ContactPhone</a>
+            }
+        </div>
+    </div>
+</div>
+
+<header class="site-header" id="siteHeader">
+    <div class="container-x">
+        <div class="header-main">
+            <button class="nav-toggle" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileNav"
+                    aria-controls="mobileNav" aria-label="Open menu">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
+                </svg>
+            </button>
+
+            <a class="brand" asp-controller="Home" asp-action="Index">
+                @if (hasLogo)
+                {
+                    <img class="brand__logo" src="@s.LogoUrl" alt="@s.SiteName" />
+                }
+                else
+                {
+                    <span class="brand__mark">@(s.SiteName.Length > 0 ? s.SiteName[0].ToString() : "S")</span>
+                }
+                <span>@s.SiteName</span>
+            </a>
+
+            <div class="header-search">
+                <form asp-controller="Catalog" asp-action="Search" method="get" role="search">
+                    <input type="search" name="q" placeholder="Search for products, brands and more…"
+                           aria-label="Search products" autocomplete="off" />
+                    <button type="submit" aria-label="Search">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                            <circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg>
+                    </button>
+                </form>
+            </div>
+
+            <div class="header-actions">
+                @await Component.InvokeAsync("CurrencySwitcher")
+
+                @if (wishlistOn)
+                {
+                    <a class="icon-btn" asp-controller="Wishlist" asp-action="Index" aria-label="Wishlist">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z" />
+                        </svg>
+                        <span>Wishlist</span>
+                        <span class="count @(Model.WishlistCount > 0 ? "" : "d-none")" data-wishlist-count>@Model.WishlistCount</span>
+                    </a>
+                }
+
+                <div class="dropdown mini-cart">
+                    <a class="icon-btn" asp-controller="Cart" asp-action="Index" aria-label="Cart"
+                       data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
+                            <path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6" />
+                        </svg>
+                        <span>Cart</span>
+                        <span class="count @(Model.CartCount > 0 ? "" : "d-none")" data-cart-count>@Model.CartCount</span>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-end mini-cart__panel">
+                        @if (Model.MiniCartLines.Count == 0)
+                        {
+                            <p class="mini-cart__empty">Your cart is empty.</p>
+                        }
+                        else
+                        {
+                            <div class="mini-cart__lines">
+                                @foreach (var l in Model.MiniCartLines)
+                                {
+                                    <a class="mini-cart__line" href="/p/@l.Slug">
+                                        <span class="mini-cart__thumb">
+                                            @if (!string.IsNullOrEmpty(l.ImageUrl)) { <img src="@l.ImageUrl" alt="" /> }
+                                        </span>
+                                        <span class="mini-cart__info">
+                                            <span class="mini-cart__name">@l.Name</span>
+                                            <span class="mini-cart__meta">Qty @l.Quantity · @l.LineTotalDisplay</span>
+                                        </span>
+                                    </a>
+                                }
+                            </div>
+                            @if (Model.MiniCartMore > 0)
+                            {
+                                <p class="mini-cart__more">+ @Model.MiniCartMore more item(s)</p>
+                            }
+                            <div class="mini-cart__foot">
+                                <span>Subtotal</span>
+                                <strong data-cart-subtotal>@Model.CartSubTotalDisplay</strong>
+                            </div>
+                            <div class="mini-cart__actions">
+                                <a class="btn btn-ghost btn-sm" asp-controller="Cart" asp-action="Index">View cart</a>
+                                <a class="btn btn-primary btn-sm" asp-controller="Checkout" asp-action="Index">Checkout</a>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(Model.CartTotalDisplay))
+                {
+                    <span class="cart-btn__amount d-none d-lg-inline" data-cart-amount>@Model.CartTotalDisplay</span>
+                }
+
+                <div class="dropdown account-menu">
+                    <button class="icon-btn" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Account">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+                        </svg>
+                        <span>Account</span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end">
+                        @if (isAuth)
+                        {
+                            <h6 class="dropdown-header text-truncate">Hi, @userName</h6>
+                            <a class="dropdown-item" asp-controller="Account" asp-action="Orders">My Orders</a>
+                            @if (wishlistOn)
+                            {
+                                <a class="dropdown-item" asp-controller="Wishlist" asp-action="Index">Wishlist</a>
+                            }
+                            <a class="dropdown-item" asp-controller="Account" asp-action="Profile">Profile</a>
+                            <a class="dropdown-item" asp-controller="Account" asp-action="Addresses">Addresses</a>
+                            @if (isAdmin)
+                            {
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item fw-semibold" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">Admin Panel</a>
+                            }
+                            <div class="dropdown-divider"></div>
+                            <form asp-controller="Account" asp-action="Logout" method="post" class="px-1">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="dropdown-item text-danger">Log out</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <a class="dropdown-item" asp-controller="Account" asp-action="Login">Log in</a>
+                            <a class="dropdown-item" asp-controller="Account" asp-action="Register">Create account</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" asp-controller="Order" asp-action="Track">Track an order</a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @await Component.InvokeAsync("MainNav")
+</header>

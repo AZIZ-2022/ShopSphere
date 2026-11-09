@@ -1,0 +1,144 @@
+@model ECommerce.Web.Models.Orders.CheckoutViewModel
+@inject ECommerce.Web.Infrastructure.IMoneyFormatter Money
+@using ECommerce.Domain.Enums
+@{
+    ViewData["Title"] = "Checkout";
+    var ctx = Model.Context;
+    var addresses = ctx.Addresses;
+}
+
+<div class="page">
+    <div class="container-x">
+        <h1 class="mb-4">Checkout</h1>
+
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 px-3 small"></div>
+
+        <form asp-action="Place" method="post" class="checkout-layout">
+            @Html.AntiForgeryToken()
+
+            <div class="checkout-main">
+                <section class="panel">
+                    <h2>Delivery address</h2>
+                    @if (addresses.Count > 0)
+                    {
+                        <div class="addr-choices">
+                            @foreach (var a in addresses)
+                            {
+                                <label class="addr-choice">
+                                    <input type="radio" name="ShippingAddressId" value="@a.Id" checked="@(Model.Form.ShippingAddressId == a.Id)" />
+                                    <span class="addr-choice__body">
+                                        <strong>@a.FullName</strong> · @a.Phone
+                                        <span>@a.OneLine</span>
+                                        @if (a.IsDefault) { <span class="badge-pill badge-pill--new">Default</span> }
+                                    </span>
+                                </label>
+                            }
+                            <label class="addr-choice">
+                                <input type="radio" name="ShippingAddressId" value="0" checked="@(Model.Form.ShippingAddressId is null or 0)" />
+                                <span class="addr-choice__body"><strong>Use a new address</strong></span>
+                            </label>
+                        </div>
+                    }
+
+                    <div class="new-address @(addresses.Count > 0 ? "new-address--collapsible" : "")" id="newAddress">
+                        <div class="row g-3">
+                            <div class="col-md-6"><label class="form-label">Full name</label><input asp-for="Form.NewAddress.FullName" class="form-control" /><span asp-validation-for="Form.NewAddress.FullName" class="text-danger small"></span></div>
+                            <div class="col-md-6"><label class="form-label">Phone</label><input asp-for="Form.NewAddress.Phone" class="form-control" /><span asp-validation-for="Form.NewAddress.Phone" class="text-danger small"></span></div>
+                            <div class="col-12"><label class="form-label">Address line 1</label><input asp-for="Form.NewAddress.Line1" class="form-control" /><span asp-validation-for="Form.NewAddress.Line1" class="text-danger small"></span></div>
+                            <div class="col-12"><label class="form-label">Address line 2 (optional)</label><input asp-for="Form.NewAddress.Line2" class="form-control" /></div>
+                            <div class="col-md-5"><label class="form-label">City</label><input asp-for="Form.NewAddress.City" class="form-control" /><span asp-validation-for="Form.NewAddress.City" class="text-danger small"></span></div>
+                            <div class="col-md-4"><label class="form-label">State / Division</label><input asp-for="Form.NewAddress.State" class="form-control" /></div>
+                            <div class="col-md-3"><label class="form-label">Postal code</label><input asp-for="Form.NewAddress.PostalCode" class="form-control" /><span asp-validation-for="Form.NewAddress.PostalCode" class="text-danger small"></span></div>
+                            <div class="col-md-6"><label class="form-label">Country</label><input asp-for="Form.NewAddress.Country" class="form-control" /></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <h2>Payment method</h2>
+                    @if (ctx.EnableCod)
+                    {
+                        <label class="pay-choice">
+                            <input type="radio" name="PaymentMethod" value="@((int)PaymentMethodType.CashOnDelivery)" checked="@(Model.Form.PaymentMethod == PaymentMethodType.CashOnDelivery)" />
+                            <span><strong>Cash on Delivery</strong><br /><span class="text-muted small">Pay with cash when your order arrives.</span></span>
+                        </label>
+                    }
+                    @if (ctx.EnableOnlineGateway)
+                    {
+                        <label class="pay-choice">
+                            <input type="radio" name="PaymentMethod" value="@((int)PaymentMethodType.OnlineGateway)" checked="@(Model.Form.PaymentMethod == PaymentMethodType.OnlineGateway || !ctx.EnableCod)" />
+                            <span><strong>Online Payment</strong><br /><span class="text-muted small">Pay securely online.</span></span>
+                        </label>
+                    }
+                    @if (!ctx.EnableCod && !ctx.EnableOnlineGateway)
+                    {
+                        <p class="text-danger small mb-0">No payment method is currently available. Please contact support.</p>
+                    }
+                </section>
+
+                <section class="panel">
+                    <h2>Order note (optional)</h2>
+                    <textarea asp-for="Form.CustomerNote" class="form-control" rows="2" placeholder="Delivery instructions, etc."></textarea>
+                </section>
+            </div>
+
+            <aside class="checkout-summary">
+                <h2>Your order</h2>
+                <div class="checkout-lines">
+                    @foreach (var l in ctx.Lines)
+                    {
+                        <div class="checkout-line">
+                            <span class="checkout-line__qty">@l.Quantity×</span>
+                            <span class="checkout-line__name">@l.Name</span>
+                            <span class="checkout-line__total">@Money.Format(l.LineTotal)</span>
+                        </div>
+                    }
+                </div>
+
+                <div class="coupon-row">
+                    <input asp-for="Form.CouponCode" class="form-control" placeholder="Coupon code" />
+                    <button type="submit" formaction="@Url.Action("ApplyCoupon")" formmethod="post" class="btn btn-ghost">Apply</button>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.CouponMessage))
+                {
+                    <p class="small @(Model.CouponApplied ? "text-success" : "text-danger")">@Model.CouponMessage</p>
+                }
+
+                <dl class="order-totals">
+                    <div><dt>Subtotal</dt><dd>@Money.Format(ctx.SubTotal)</dd></div>
+                    @if (ctx.DiscountAmount > 0)
+                    {
+                        <div class="is-discount"><dt>Discount</dt><dd>−@Money.Format(ctx.DiscountAmount)</dd></div>
+                    }
+                    <div><dt>Shipping</dt><dd>@(ctx.ShippingCost == 0 ? "Free" : Money.Format(ctx.ShippingCost))</dd></div>
+                    @if (ctx.TaxAmount > 0)
+                    {
+                        <div><dt>Tax</dt><dd>@Money.Format(ctx.TaxAmount)</dd></div>
+                    }
+                    <div class="is-total"><dt>Total</dt><dd>@Money.Format(ctx.GrandTotal)</dd></div>
+                </dl>
+
+                <button type="submit" class="btn btn-primary btn-lg w-100">Place order</button>
+                <a class="cart-continue d-block text-center mt-2" href="/cart">← Back to cart</a>
+            </aside>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            var box = document.getElementById('newAddress');
+            var radios = document.querySelectorAll('input[name="ShippingAddressId"]');
+            function sync() {
+                if (!box || radios.length === 0) { return; }
+                var val = document.querySelector('input[name="ShippingAddressId"]:checked');
+                var isNew = !val || val.value === '0';
+                box.classList.toggle('is-open', isNew);
+            }
+            radios.forEach(function (r) { r.addEventListener('change', sync); });
+            sync();
+        })();
+    </script>
+}

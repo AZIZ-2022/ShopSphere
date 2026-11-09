@@ -1,0 +1,23 @@
+@model ECommerce.Web.Models.ErrorPageViewModel
+@{
+    ViewData["Title"] = Model.Title;
+    Layout = "_Layout";
+}
+
+<div class="page">
+    <div class="container-x">
+        <div class="error-page">
+            <div class="error-page__code">@Model.StatusCode</div>
+            <h1>@Model.Title</h1>
+            <p>@Model.Message</p>
+            <div class="error-page__actions">
+                <a class="btn btn-primary" href="/">Back to home</a>
+                <a class="btn btn-ghost" asp-controller="Home" asp-action="Contact">Contact support</a>
+            </div>
+            @if (!string.IsNullOrEmpty(Model.RequestId) && Model.StatusCode >= 500)
+            {
+                <p class="error-page__ref">Reference: <code>@Model.RequestId</code></p>
+            }
+        </div>
+    </div>
+</div>

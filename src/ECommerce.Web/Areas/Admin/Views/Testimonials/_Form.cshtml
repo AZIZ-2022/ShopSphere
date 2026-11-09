@@ -1,0 +1,39 @@
+@model ECommerce.Application.Cms.TestimonialEditModel
+
+<div asp-validation-summary="All" class="alert alert-danger py-2 px-3 small"></div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="panel">
+            <p class="text-eyebrow mb-3">Testimonial</p>
+            <div class="mb-3"><label class="form-label">Customer name <span class="required-mark">*</span></label><input asp-for="CustomerName" class="form-control" autofocus /><span asp-validation-for="CustomerName" class="text-danger small"></span></div>
+            <div class="mb-3"><label class="form-label">Designation</label><input asp-for="Designation" class="form-control" placeholder="Verified Buyer" /></div>
+            <div class="mb-0"><label class="form-label">Message <span class="required-mark">*</span></label><textarea asp-for="Message" class="form-control" rows="4"></textarea><span asp-validation-for="Message" class="text-danger small"></span></div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="panel">
+            <p class="text-eyebrow mb-3">Display</p>
+            <div class="mb-3">
+                <label class="form-label">Photo <span class="text-muted">(optional)</span></label>
+                @if (!string.IsNullOrEmpty(Model.PhotoUrl))
+                {
+                    <div class="mb-2"><img src="@Model.PhotoUrl" alt="" style="width:56px;height:56px;object-fit:cover;border-radius:50%;border:1px solid var(--c-line)" /></div>
+                }
+                <input type="hidden" asp-for="PhotoUrl" />
+                <input type="file" name="photoFile" class="form-control" accept="image/*" />
+            </div>
+            <div class="mb-3"><label class="form-label">Rating</label>
+                <select asp-for="Rating" class="form-select">
+                    @for (var i = 5; i >= 1; i--) { <option value="@i">@i stars</option> }
+                </select>
+            </div>
+            <div class="mb-3"><label class="form-label">Display order</label><input asp-for="DisplayOrder" type="number" class="form-control" /></div>
+            <div class="form-check"><input asp-for="IsActive" class="form-check-input" /><label asp-for="IsActive" class="form-check-label">Active</label></div>
+        </div>
+        <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary"><icon name="save" class="icon--sm" /> Save</button>
+            <a class="btn btn-ghost" asp-action="Index"><icon name="close" class="icon--sm" /> Cancel</a>
+        </div>
+    </div>
+</div>

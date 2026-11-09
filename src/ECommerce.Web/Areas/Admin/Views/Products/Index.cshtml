@@ -1,0 +1,80 @@
+@model ECommerce.Application.Common.Models.PagedResult<ECommerce.Application.Catalog.Admin.AdminProductListItem>
+@{
+    var search = ViewData["Search"] as string;
+    string PageUrl(int p) => $"/Admin/Products?page={p}" + (string.IsNullOrWhiteSpace(search) ? "" : $"&q={Uri.EscapeDataString(search)}");
+}
+
+<div class="admin-page-head">
+    <h1 class="text-page-title">Products</h1>
+    <a class="btn btn-primary" asp-action="Create"><icon name="plus" class="icon--sm" /> New product</a>
+</div>
+
+<form method="get" class="admin-search">
+    <input type="search" name="q" value="@search" placeholder="Search name or SKU…" class="form-control" />
+    <button class="btn btn-ghost" type="submit"><icon name="search" class="icon--sm" /> Search</button>
+    @if (!string.IsNullOrWhiteSpace(search))
+    {
+        <a class="btn btn-ghost" asp-action="Index"><icon name="close" class="icon--sm" /> Clear</a>
+    }
+</form>
+
+<div class="panel p-0">
+    <table class="admin-table">
+        <thead>
+            <tr><th></th><th>Name</th><th>SKU</th><th>Category</th><th class="num">Price</th><th class="num">Stock</th><th>Flags</th><th class="actions"></th></tr>
+        </thead>
+        <tbody>
+        @if (Model.TotalCount == 0)
+        {
+            <tr><td colspan="8"><div class="empty-state-cell"><icon name="products" class="icon--lg" /><span>No products found.</span></div></td></tr>
+        }
+        @foreach (var p in Model.Items)
+        {
+            <tr>
+                <td class="thumb-cell">
+                    @if (!string.IsNullOrEmpty(p.MainImageUrl))
+                    {
+                        <img src="@p.MainImageUrl" alt="" />
+                    }
+                    else
+                    {
+                        <span class="thumb-empty"></span>
+                    }
+                </td>
+                <td><strong>@p.Name</strong>@if (!p.IsActive) { <span class="badge-status off ms-2">Hidden</span> }</td>
+                <td class="text-muted">@p.Sku</td>
+                <td>@p.CategoryName</td>
+                <td class="num">
+                    @if (p.DiscountPrice is { } d)
+                    {
+                        <span class="text-danger">@d.ToString("0.00")</span> <s class="text-muted small">@p.Price.ToString("0.00")</s>
+                    }
+                    else
+                    {
+                        @p.Price.ToString("0.00")
+                    }
+                </td>
+                <td class="num @(p.StockQuantity == 0 ? "text-danger" : "")">@p.StockQuantity</td>
+                <td class="flags">
+                    @if (p.IsFeatured) { <span class="chip-flag">Featured</span> }
+                    @if (p.IsNewArrival) { <span class="chip-flag">New</span> }
+                </td>
+                <td class="actions">
+                    <a class="btn btn-ghost btn-sm" asp-action="Edit" asp-route-id="@p.Id"><icon name="edit" class="icon--sm" /> Edit</a>
+                    <form asp-action="Delete" asp-route-id="@p.Id" method="post" class="d-inline"
+                          onsubmit="return confirm('Delete &quot;@p.Name&quot;?');">
+                        @Html.AntiForgeryToken()
+                        <button class="btn btn-danger-ghost btn-sm" type="submit"><icon name="delete" class="icon--sm" /> Delete</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+@if (Model.TotalPages > 1)
+{
+    <partial name="~/Views/Shared/_Pagination.cshtml"
+             model="@(new ECommerce.Web.Models.Catalog.PagerModel(Model.Page, Model.TotalPages, PageUrl))" />
+}

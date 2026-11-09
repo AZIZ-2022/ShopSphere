@@ -1,0 +1,109 @@
+@model IReadOnlyList<ECommerce.Application.Navigation.NavCategoryDto>
+
+@functions {
+    static string CatUrl(ECommerce.Application.Navigation.NavCategoryDto c) => $"/c/{c.Slug}";
+}
+
+<nav class="primary-nav" aria-label="Product categories">
+    <div class="container-x">
+        <ul class="primary-nav__list">
+            <li class="primary-nav__item">
+                <a class="primary-nav__link" href="/" active-when-path="/" active-when-controller="Home" active-when-action="Index">Home</a>
+            </li>
+
+            @foreach (var cat in Model)
+            {
+                <li class="primary-nav__item">
+                    <a class="primary-nav__link" href="@CatUrl(cat)" active-when-path="@CatUrl(cat)">
+                        @cat.Name
+                        @if (cat.HasChildren)
+                        {
+                            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9" /></svg>
+                        }
+                    </a>
+
+                    @if (cat.HasChildren)
+                    {
+                        var hasGrandchildren = cat.Children.Any(ch => ch.HasChildren);
+                        <div class="nav-panel @(hasGrandchildren ? "nav-panel--mega" : "")">
+                            @if (hasGrandchildren)
+                            {
+                                foreach (var child in cat.Children)
+                                {
+                                    <div class="nav-panel__group">
+                                        <p class="nav-panel__group-title">
+                                            <a href="@CatUrl(child)">@child.Name</a>
+                                        </p>
+                                        @foreach (var leaf in child.Children)
+                                        {
+                                            <a href="@CatUrl(leaf)">@leaf.Name</a>
+                                        }
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                foreach (var child in cat.Children)
+                                {
+                                    <a href="@CatUrl(child)">@child.Name</a>
+                                }
+                            }
+                        </div>
+                    }
+                </li>
+            }
+
+            <li class="primary-nav__item ms-auto">
+                <a class="primary-nav__link primary-nav__link--accent" href="/deals" active-when-path="/deals">Deals</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<div class="offcanvas offcanvas-start mobile-nav" tabindex="-1" id="mobileNav" aria-labelledby="mobileNavLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="mobileNavLabel">Browse</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-0">
+        <a class="mobile-nav__leaf" href="/">Home</a>
+
+        <div class="accordion accordion-flush" id="mobileNavAccordion">
+            @for (var i = 0; i < Model.Count; i++)
+            {
+                var cat = Model[i];
+                if (!cat.HasChildren)
+                {
+                    <a class="mobile-nav__leaf" href="@CatUrl(cat)">@cat.Name</a>
+                    continue;
+                }
+                var headingId = $"mnav-h-{i}";
+                var collapseId = $"mnav-c-{i}";
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="@headingId">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#@collapseId" aria-expanded="false" aria-controls="@collapseId">
+                            @cat.Name
+                        </button>
+                    </h2>
+                    <div id="@collapseId" class="accordion-collapse collapse" aria-labelledby="@headingId"
+                         data-bs-parent="#mobileNavAccordion">
+                        <div class="accordion-body">
+                            <a href="@CatUrl(cat)" class="fw-semibold">All @cat.Name</a>
+                            @foreach (var child in cat.Children)
+                            {
+                                <a href="@CatUrl(child)">@child.Name</a>
+                                @foreach (var leaf in child.Children)
+                                {
+                                    <a href="@CatUrl(leaf)" class="ps-4 text-muted">@leaf.Name</a>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <a class="mobile-nav__leaf text-danger" href="/deals">Deals</a>
+    </div>
+</div>

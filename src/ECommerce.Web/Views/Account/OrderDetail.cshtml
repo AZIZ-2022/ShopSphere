@@ -1,0 +1,96 @@
+@model ECommerce.Application.Orders.OrderDto
+@{
+    ViewData["Title"] = $"Order {Model.OrderNumber}";
+}
+
+<div class="page">
+    <div class="container-x">
+        <h1 class="mb-4">My Account</h1>
+        <div class="account-layout">
+            <partial name="_AccountNav" />
+            <div>
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <div>
+                        <h2 class="text-section-title mb-1">@Model.OrderNumber</h2>
+                        <span class="text-muted small">Placed @Model.PlacedAt.ToString("MMMM d, yyyy · HH:mm")</span>
+                    </div>
+                    <span class="order-status @ECommerce.Web.Infrastructure.OrderUi.StatusClass(Model.Status)">@Model.Status</span>
+                </div>
+
+                @if (Model.AwaitingPayment)
+                {
+                    <div class="alert alert-warning d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <span>This order is waiting for online payment.</span>
+                        <a class="btn btn-primary btn-sm" asp-controller="Order" asp-action="Pay" asp-route-orderNumber="@Model.OrderNumber">Complete payment</a>
+                    </div>
+                }
+
+                <div class="order-detail-grid">
+                    <div class="panel">
+                        <h3 class="text-card-title mb-3">Items</h3>
+                        <partial name="_OrderSummary" model="Model" />
+                    </div>
+
+                    <div>
+                        <div class="panel">
+                            <h3 class="text-card-title mb-3">Delivery address</h3>
+                            <p class="mb-1"><strong>@Model.ShippingName</strong></p>
+                            <p class="mb-1 text-muted small">@Model.ShippingPhone</p>
+                            <p class="mb-0 text-muted small">@Model.ShippingOneLine</p>
+                        </div>
+                        <div class="panel">
+                            <h3 class="text-card-title mb-3">Payment</h3>
+                            <p class="mb-1">@ECommerce.Web.Infrastructure.OrderUi.PaymentMethodLabel(Model.PaymentMethod)</p>
+                            <span class="order-status @ECommerce.Web.Infrastructure.OrderUi.PaymentClass(Model.PaymentStatus)">@Model.PaymentStatus</span>
+                            @foreach (var p in Model.Payments.Where(p => p.TransactionId is not null))
+                            {
+                                <p class="text-muted small mb-0 mt-2">Txn @p.TransactionId · @p.PaidAt?.ToString("MMM d, HH:mm")</p>
+                            }
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(Model.CustomerNote))
+                        {
+                            <div class="panel">
+                                <h3 class="text-card-title mb-3">Your note</h3>
+                                <p class="mb-0 text-muted small">@Model.CustomerNote</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3 class="text-card-title mb-3">Order timeline</h3>
+                    <partial name="_OrderTimeline" model="Model" />
+                </div>
+
+                @if (Model.CanCancel || Model.CanRequestReturn)
+                {
+                    <div class="panel">
+                        <h3 class="text-card-title mb-3">Need to make a change?</h3>
+                        @if (Model.CanCancel)
+                        {
+                            <form asp-action="CancelOrder" asp-route-orderNumber="@Model.OrderNumber" method="post"
+                                  class="d-flex gap-2 flex-wrap align-items-start mb-2"
+                                  onsubmit="return confirm('Cancel this order? This cannot be undone.');">
+                                @Html.AntiForgeryToken()
+                                <input type="text" name="reason" class="form-control" placeholder="Reason (optional)" style="max-width:320px" maxlength="500" />
+                                <button type="submit" class="btn btn-danger-ghost"><icon name="close" class="icon--sm" /> Cancel order</button>
+                            </form>
+                        }
+                        @if (Model.CanRequestReturn)
+                        {
+                            <form asp-action="RequestReturn" asp-route-orderNumber="@Model.OrderNumber" method="post"
+                                  class="d-flex gap-2 flex-wrap align-items-start"
+                                  onsubmit="return confirm('Request a return for this order?');">
+                                @Html.AntiForgeryToken()
+                                <input type="text" name="reason" class="form-control" placeholder="Reason for return (optional)" style="max-width:320px" maxlength="500" />
+                                <button type="submit" class="btn btn-ghost"><icon name="undo" class="icon--sm" /> Request return</button>
+                            </form>
+                        }
+                    </div>
+                }
+
+                <a class="btn btn-ghost" asp-action="Orders"><icon name="arrow-left" class="icon--sm" /> Back to orders</a>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,74 @@
+@model ECommerce.Web.Models.Account.ProfileViewModel
+@{
+    ViewData["Title"] = "Profile";
+}
+
+<div class="page">
+    <div class="container-x">
+        <h1 class="mb-4">My Account</h1>
+
+        <div class="account-layout">
+            <partial name="_AccountNav" />
+
+            <div>
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 px-3 small" role="alert"></div>
+
+                <section class="panel">
+                    <h2>Profile details</h2>
+                    <form asp-action="Profile" method="post" class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="FullName" class="form-label"></label>
+                            <input asp-for="FullName" class="form-control" />
+                            <span asp-validation-for="FullName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="form-label"></label>
+                            <input asp-for="Email" class="form-control" readonly disabled />
+                            <span class="text-muted small">Email can't be changed here.</span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="PhoneNumber" class="form-label"></label>
+                            <input asp-for="PhoneNumber" class="form-control" />
+                            <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Member since</label>
+                            <input class="form-control" value="@Model.MemberSince.ToString("MMMM d, yyyy")" readonly disabled />
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">Save changes</button>
+                        </div>
+                    </form>
+                </section>
+
+                <section class="panel">
+                    <h2>Change password</h2>
+                    <form asp-action="ChangePassword" method="post" class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label" for="CurrentPassword">Current password</label>
+                            <input type="password" id="CurrentPassword" name="CurrentPassword" class="form-control" autocomplete="current-password" />
+                            <span class="text-danger small">@Html.ValidationMessage("CurrentPassword")</span>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="NewPassword">New password</label>
+                            <input type="password" id="NewPassword" name="NewPassword" class="form-control" autocomplete="new-password" />
+                            <span class="text-danger small">@Html.ValidationMessage("NewPassword")</span>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="ConfirmPassword">Confirm new password</label>
+                            <input type="password" id="ConfirmPassword" name="ConfirmPassword" class="form-control" autocomplete="new-password" />
+                            <span class="text-danger small">@Html.ValidationMessage("ConfirmPassword")</span>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-ghost">Update password</button>
+                        </div>
+                    </form>
+                </section>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

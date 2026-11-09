@@ -1,0 +1,40 @@
+@model ECommerce.Application.Orders.AddressEditModel
+@{
+    var isEdit = Model.Id != 0;
+    ViewData["Title"] = isEdit ? "Edit address" : "New address";
+}
+
+<div class="page">
+    <div class="container-x">
+        <h1 class="mb-4">My Account</h1>
+        <div class="account-layout">
+            <partial name="_AccountNav" />
+            <div>
+                <h2 class="text-section-title mb-3">@(isEdit ? "Edit address" : "Add a new address")</h2>
+                <form asp-action="@(isEdit ? "EditAddress" : "AddAddress")" asp-route-id="@(isEdit ? Model.Id : (int?)null)" method="post" class="panel">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 px-3 small"></div>
+                    <div class="row g-3">
+                        <div class="col-md-6"><label asp-for="FullName" class="form-label"></label><input asp-for="FullName" class="form-control" /><span asp-validation-for="FullName" class="text-danger small"></span></div>
+                        <div class="col-md-6"><label asp-for="Phone" class="form-label"></label><input asp-for="Phone" class="form-control" /><span asp-validation-for="Phone" class="text-danger small"></span></div>
+                        <div class="col-12"><label asp-for="Line1" class="form-label"></label><input asp-for="Line1" class="form-control" /><span asp-validation-for="Line1" class="text-danger small"></span></div>
+                        <div class="col-12"><label asp-for="Line2" class="form-label"></label><input asp-for="Line2" class="form-control" /></div>
+                        <div class="col-md-5"><label asp-for="City" class="form-label"></label><input asp-for="City" class="form-control" /><span asp-validation-for="City" class="text-danger small"></span></div>
+                        <div class="col-md-4"><label asp-for="State" class="form-label"></label><input asp-for="State" class="form-control" /></div>
+                        <div class="col-md-3"><label asp-for="PostalCode" class="form-label"></label><input asp-for="PostalCode" class="form-control" /><span asp-validation-for="PostalCode" class="text-danger small"></span></div>
+                        <div class="col-md-6"><label asp-for="Country" class="form-label"></label><input asp-for="Country" class="form-control" /></div>
+                        <div class="col-12">
+                            <div class="form-check"><input asp-for="IsDefault" class="form-check-input" /><label asp-for="IsDefault" class="form-check-label"></label></div>
+                        </div>
+                        <div class="col-12 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary"><icon name="save" class="icon--sm" /> Save address</button>
+                            <a class="btn btn-ghost" asp-action="Addresses"><icon name="close" class="icon--sm" /> Cancel</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

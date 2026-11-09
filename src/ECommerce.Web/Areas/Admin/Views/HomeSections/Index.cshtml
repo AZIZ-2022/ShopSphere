@@ -1,0 +1,54 @@
+@model IReadOnlyList<ECommerce.Application.Home.HomeSectionEditModel>
+
+<div class="admin-page-head">
+    <h1 class="text-page-title">Homepage sections</h1>
+</div>
+
+<p class="text-muted-sm mb-3">Reorder, show/hide, or edit the text of each homepage section. The set of sections is fixed — each one maps to a specific block on the homepage.</p>
+
+<div class="panel p-0">
+    <table class="admin-table">
+        <thead><tr><th class="num" style="width:90px">Order</th><th>Section</th><th>Content</th><th>Status</th><th class="actions"></th></tr></thead>
+        <tbody>
+        @for (var i = 0; i < Model.Count; i++)
+        {
+            var s = Model[i];
+            <tr>
+                <td class="num">
+                    <div class="d-flex gap-1 justify-content-end">
+                        <form asp-action="MoveUp" asp-route-id="@s.Id" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button class="btn btn-ghost btn-xs" type="submit" title="Move up" disabled="@(i == 0 ? "disabled" : null)"><icon name="chevron-up" class="icon--sm" /></button>
+                        </form>
+                        <form asp-action="MoveDown" asp-route-id="@s.Id" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button class="btn btn-ghost btn-xs" type="submit" title="Move down" disabled="@(i == Model.Count - 1 ? "disabled" : null)"><icon name="chevron-down" class="icon--sm" /></button>
+                        </form>
+                    </div>
+                </td>
+                <td><strong>@s.Label</strong></td>
+                <td class="text-muted small">@(s.Title ?? "—")</td>
+                <td>
+                    <form asp-action="ToggleVisible" asp-route-id="@s.Id" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="visible" value="@((!s.IsVisible).ToString().ToLower())" />
+                        <button class="btn btn-ghost btn-sm" type="submit">
+                            @if (s.IsVisible)
+                            {
+                                <span class="badge-status on">Visible</span>
+                            }
+                            else
+                            {
+                                <span class="badge-status off">Hidden</span>
+                            }
+                        </button>
+                    </form>
+                </td>
+                <td class="actions">
+                    <a class="btn btn-ghost btn-sm" asp-action="Edit" asp-route-id="@s.Id"><icon name="edit" class="icon--sm" /> Edit</a>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

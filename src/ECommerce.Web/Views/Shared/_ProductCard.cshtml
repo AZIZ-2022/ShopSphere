@@ -1,0 +1,76 @@
+@model ECommerce.Application.Catalog.ProductListItemDto
+@inject ECommerce.Web.Infrastructure.IMoneyFormatter Money
+@inject ECommerce.Application.Common.Features.IFeatureFlagService Features
+@{
+    var wishlistOn = await Features.IsEnabledAsync(ECommerce.Application.Common.Features.FeatureFlagKeys.Wishlist);
+    var reviewsOn = await Features.IsEnabledAsync(ECommerce.Application.Common.Features.FeatureFlagKeys.Reviews);
+}
+
+<article class="product-card">
+    <a class="product-card__media" href="/p/@Model.Slug">
+        @if (!string.IsNullOrEmpty(Model.MainImageUrl))
+        {
+            <img src="@Model.MainImageUrl" alt="@Model.Name" loading="lazy" />
+        }
+        else
+        {
+            <span class="product-card__noimg" aria-hidden="true">No image</span>
+        }
+
+        <span class="product-card__badges">
+            @if (Model.DiscountPercent > 0)
+            {
+                <span class="badge-pill badge-pill--sale">-@Model.DiscountPercent%</span>
+            }
+            @if (Model.IsNewArrival)
+            {
+                <span class="badge-pill badge-pill--new">New</span>
+            }
+        </span>
+
+        @if (!Model.InStock)
+        {
+            <span class="product-card__oos">Out of stock</span>
+        }
+    </a>
+
+    <div class="product-card__body">
+        @if (!string.IsNullOrEmpty(Model.CategoryName))
+        {
+            <div class="product-card__cat">@Model.CategoryName</div>
+        }
+        <h3 class="product-card__title"><a href="/p/@Model.Slug">@Model.Name</a></h3>
+
+        @if (reviewsOn)
+        {
+            @if (Model.ReviewCount > 0)
+            {
+                <partial name="_StarRating" model="new ECommerce.Web.Models.Catalog.StarRating((double)Model.AverageRating, Model.ReviewCount)" />
+            }
+            else
+            {
+                <span class="stars stars--empty">No reviews yet</span>
+            }
+        }
+
+        <div class="product-card__price">
+            <span class="price-now">@Money.Format(Model.EffectivePrice)</span>
+            @if (Model.DiscountPercent > 0)
+            {
+                <span class="price-was">@Money.Format(Model.Price)</span>
+            }
+        </div>
+
+        <div class="product-card__actions">
+            <button type="button" class="btn btn-primary btn-sm w-100" data-add-to-cart data-product-id="@Model.Id" @(Model.InStock ? "" : "disabled")>
+                Add to cart
+            </button>
+            @if (wishlistOn)
+            {
+                <button type="button" class="icon-heart" data-wishlist-toggle data-product-id="@Model.Id" aria-label="Add to wishlist">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+                </button>
+            }
+        </div>
+    </div>
+</article>

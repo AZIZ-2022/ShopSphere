@@ -1,0 +1,57 @@
+@model ECommerce.Application.Cms.SliderEditModel
+
+<div asp-validation-summary="All" class="alert alert-danger py-2 px-3 small"></div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="panel">
+            <p class="text-eyebrow mb-3">Slide content</p>
+            <div class="mb-3"><label class="form-label">Title <span class="required-mark">*</span></label><input asp-for="Title" class="form-control" autofocus /><span asp-validation-for="Title" class="text-danger small"></span></div>
+            <div class="mb-3"><label class="form-label">Subtitle</label><input asp-for="Subtitle" class="form-control" /></div>
+            <div class="mb-3">
+                <label class="form-label">Desktop image <span class="required-mark">*</span></label>
+                @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                {
+                    <div class="mb-2"><img src="@Model.ImageUrl" alt="" style="width:160px;height:80px;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--c-line)" /></div>
+                }
+                <input type="hidden" asp-for="ImageUrl" />
+                <input type="file" name="imageFile" class="form-control" accept="image/*" />
+                <span asp-validation-for="ImageUrl" class="text-danger small"></span>
+                <p class="field-hint">JPG/PNG/WebP, max 3 MB. Leave empty to keep the current image.</p>
+            </div>
+            <div class="mb-0">
+                <label class="form-label">Mobile image <span class="text-muted">(optional)</span></label>
+                @if (!string.IsNullOrEmpty(Model.MobileImageUrl))
+                {
+                    <div class="mb-2"><img src="@Model.MobileImageUrl" alt="" style="width:80px;height:80px;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--c-line)" /></div>
+                }
+                <input type="hidden" asp-for="MobileImageUrl" />
+                <input type="file" name="mobileImageFile" class="form-control" accept="image/*" />
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="panel">
+            <p class="text-eyebrow mb-3">Placement</p>
+            <div class="mb-3"><label class="form-label">Link URL</label><input asp-for="LinkUrl" class="form-control" placeholder="/c/electronics" /></div>
+            <div class="mb-3"><label class="form-label">Button text</label><input asp-for="ButtonText" class="form-control" placeholder="Shop now" /></div>
+            <div class="mb-3"><label class="form-label">Display order</label><input asp-for="DisplayOrder" type="number" class="form-control" /></div>
+            <div class="row g-3">
+                <div class="col-6 mb-3">
+                    <label class="form-label">Starts (optional)</label>
+                    <input asp-for="StartsAt" type="datetime-local" class="form-control" />
+                </div>
+                <div class="col-6 mb-3">
+                    <label class="form-label">Ends (optional)</label>
+                    <input asp-for="EndsAt" type="datetime-local" class="form-control" />
+                </div>
+            </div>
+            <p class="field-hint mb-3">Leave blank to show whenever Active is on. Set both to schedule a promotional banner for a date range.</p>
+            <div class="form-check"><input asp-for="IsActive" class="form-check-input" /><label asp-for="IsActive" class="form-check-label">Active</label></div>
+        </div>
+        <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary"><icon name="save" class="icon--sm" /> Save</button>
+            <a class="btn btn-ghost" asp-action="Index"><icon name="close" class="icon--sm" /> Cancel</a>
+        </div>
+    </div>
+</div>

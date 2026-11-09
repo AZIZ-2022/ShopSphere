@@ -1,0 +1,43 @@
+@model IReadOnlyList<ECommerce.Application.Orders.CouponListItem>
+@{
+    var now = DateTime.UtcNow;
+}
+
+<div class="admin-page-head">
+    <h1 class="text-page-title">Coupons</h1>
+    <a class="btn btn-primary" asp-action="Create"><icon name="plus" class="icon--sm" /> New coupon</a>
+</div>
+
+<div class="panel p-0">
+    <table class="admin-table">
+        <thead><tr><th>Code</th><th>Discount</th><th class="num">Used</th><th>Valid</th><th>Status</th><th class="actions"></th></tr></thead>
+        <tbody>
+        @if (Model.Count == 0)
+        {
+            <tr><td colspan="6"><div class="empty-state-cell"><icon name="dollar" class="icon--lg" /><span>No coupons yet.</span></div></td></tr>
+        }
+        @foreach (var c in Model)
+        {
+            var expired = now > c.EndsAt;
+            <tr>
+                <td><strong>@c.Code</strong></td>
+                <td>@(c.DiscountType == ECommerce.Domain.Enums.DiscountType.Percentage ? $"{c.DiscountValue:0.##}%" : $"{c.DiscountValue:0.##} flat")</td>
+                <td class="num">@c.UsedCount@(c.UsageLimit is { } limit ? $" / {limit}" : "")</td>
+                <td class="text-muted small">@c.StartsAt.ToString("MMM d, yyyy") – @c.EndsAt.ToString("MMM d, yyyy")</td>
+                <td>
+                    @if (expired) { <span class="badge-status off">Expired</span> }
+                    else if (c.IsActive) { <span class="badge-status on">Active</span> }
+                    else { <span class="badge-status off">Disabled</span> }
+                </td>
+                <td class="actions">
+                    <a class="btn btn-ghost btn-sm" asp-action="Edit" asp-route-id="@c.Id"><icon name="edit" class="icon--sm" /> Edit</a>
+                    <form asp-action="Delete" asp-route-id="@c.Id" method="post" class="d-inline" onsubmit="return confirm('Delete coupon &quot;@c.Code&quot;?');">
+                        @Html.AntiForgeryToken()
+                        <button class="btn btn-danger-ghost btn-sm" type="submit"><icon name="delete" class="icon--sm" /> Delete</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

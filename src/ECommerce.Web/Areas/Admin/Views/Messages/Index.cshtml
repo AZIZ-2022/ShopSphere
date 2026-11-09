@@ -1,0 +1,48 @@
+@model IReadOnlyList<ECommerce.Application.Cms.ContactMessageListItem>
+@{
+    var unread = (int)(ViewData["Unread"] ?? 0);
+}
+
+<div class="admin-page-head">
+    <h1 class="text-page-title">Contact messages @if (unread > 0) { <span class="badge bg-danger">@unread new</span> }</h1>
+</div>
+
+@if (Model.Count == 0)
+{
+    <div class="panel"><div class="empty-state-cell"><icon name="messages" class="icon--lg" /><span>No messages yet.</span></div></div>
+}
+else
+{
+    <div class="msg-list">
+        @foreach (var m in Model)
+        {
+            <div class="panel msg @(m.IsRead ? "" : "msg--unread")">
+                <div class="msg__head">
+                    <div>
+                        <strong>@m.Name</strong> &lt;<a href="mailto:@m.Email">@m.Email</a>&gt;
+                        @if (!m.IsRead) { <span class="badge bg-primary ms-2">New</span> }
+                    </div>
+                    <time class="text-muted small">@m.CreatedAt.ToString("MMM d, yyyy HH:mm")</time>
+                </div>
+                @if (!string.IsNullOrEmpty(m.Subject))
+                {
+                    <div class="msg__subject">@m.Subject</div>
+                }
+                <p class="msg__body">@m.Message</p>
+                <div class="msg__actions">
+                    @if (!m.IsRead)
+                    {
+                        <form asp-action="MarkRead" asp-route-id="@m.Id" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button class="btn btn-ghost btn-sm" type="submit"><icon name="check" class="icon--sm" /> Mark as read</button>
+                        </form>
+                    }
+                    <form asp-action="Delete" asp-route-id="@m.Id" method="post" class="d-inline" onsubmit="return confirm('Delete this message?');">
+                        @Html.AntiForgeryToken()
+                        <button class="btn btn-danger-ghost btn-sm" type="submit"><icon name="delete" class="icon--sm" /> Delete</button>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+}

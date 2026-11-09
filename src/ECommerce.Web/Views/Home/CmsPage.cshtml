@@ -1,0 +1,8 @@
+@model ECommerce.Application.Cms.CmsPageViewDto
+
+<div class="page">
+    <div class="container-x info-page">
+        <h1>@Model.Title</h1>
+        @Html.Raw(Model.BodyHtml)
+    </div>
+</div>

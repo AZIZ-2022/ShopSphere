@@ -1,0 +1,26 @@
+@model ECommerce.Web.Models.Catalog.StarRating
+@{
+    var full = (int)Math.Floor(Model.Value);
+    var half = (Model.Value - full) >= 0.5;
+}
+<span class="stars" title="@Model.Value.ToString("0.0") out of 5" aria-label="Rated @Model.Value.ToString("0.0") out of 5">
+    @for (var i = 1; i <= 5; i++)
+    {
+        if (i <= full)
+        {
+            <svg viewBox="0 0 24 24" class="star star--on" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        }
+        else if (i == full + 1 && half)
+        {
+            <svg viewBox="0 0 24 24" class="star star--half" aria-hidden="true"><defs><linearGradient id="half@(Model.GetHashCode())"><stop offset="50%" stop-color="currentColor"/><stop offset="50%" stop-color="transparent"/></linearGradient></defs><path fill="url(#half@(Model.GetHashCode()))" stroke="currentColor" stroke-width="1" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        }
+        else if (Model.ShowEmpty)
+        {
+            <svg viewBox="0 0 24 24" class="star star--off" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.5" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        }
+    }
+    @if (Model.ShowCount)
+    {
+        <span class="stars__count">(@Model.Count)</span>
+    }
+</span>

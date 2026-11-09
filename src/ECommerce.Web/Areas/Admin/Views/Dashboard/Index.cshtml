@@ -1,0 +1,152 @@
+@model ECommerce.Application.Admin.DashboardDto
+@inject ECommerce.Web.Infrastructure.IMoneyFormatter Money
+@using ECommerce.Web.Infrastructure
+@{
+    ViewData["Title"] = "Dashboard";
+    var m = Model.Metrics;
+    var maxRev = Model.Sales.Count > 0 ? Model.Sales.Max(s => s.Revenue) : 0m;
+    if (maxRev <= 0) { maxRev = 1m; }
+    const int chartW = 720, chartH = 180, pad = 8;
+    var barGap = 6;
+    var barW = (chartW - pad * 2) / Model.Sales.Count - barGap;
+}
+
+<div class="admin-page-head">
+    <h1 class="text-page-title">Dashboard</h1>
+    <span class="text-muted-sm">@DateTime.UtcNow.ToString("dddd, MMM d, yyyy")</span>
+</div>
+
+<div class="kpi-grid">
+    <div class="kpi">
+        <div class="kpi__icon"><icon name="dollar" /></div>
+        <span class="kpi__label">Paid revenue</span>
+        <span class="kpi__value">@Money.Format(m.RevenuePaid)</span>
+        <span class="kpi__foot">@Money.Format(m.RevenueToday) today</span>
+    </div>
+    <div class="kpi">
+        <div class="kpi__icon"><icon name="orders" /></div>
+        <span class="kpi__label">Orders</span>
+        <span class="kpi__value">@m.TotalOrders</span>
+        <span class="kpi__foot">@m.OrdersToday placed today</span>
+    </div>
+    <div class="kpi @(m.PendingOrders > 0 ? "kpi--warn" : "")">
+        <div class="kpi__icon"><icon name="warning" /></div>
+        <span class="kpi__label">Pending orders</span>
+        <span class="kpi__value">@m.PendingOrders</span>
+        <span class="kpi__foot"><a asp-controller="Orders" asp-action="Index" asp-route-status="Pending">Review now <icon name="chevron-right" class="icon--sm" /></a></span>
+    </div>
+    <div class="kpi">
+        <div class="kpi__icon"><icon name="products" /></div>
+        <span class="kpi__label">Products</span>
+        <span class="kpi__value">@m.TotalProducts</span>
+        <span class="kpi__foot">@m.LowStockCount low on stock</span>
+    </div>
+    <div class="kpi">
+        <div class="kpi__icon"><icon name="users" /></div>
+        <span class="kpi__label">Customers</span>
+        <span class="kpi__value">@m.TotalCustomers</span>
+        <span class="kpi__foot">+@m.NewCustomersThisWeek this week</span>
+    </div>
+</div>
+
+<div class="dash-grid">
+    <div class="panel">
+        <h2 class="text-card-title mb-3"><icon name="trending-up" class="icon--sm" /> Revenue — last 14 days</h2>
+        <svg class="dash-chart" viewBox="0 0 @chartW @chartH" preserveAspectRatio="none" role="img" aria-label="Revenue bar chart for the last 14 days">
+            @{
+                var x = pad;
+            }
+            @foreach (var s in Model.Sales)
+            {
+                var h = (double)(s.Revenue / maxRev) * (chartH - 24);
+                var y = chartH - 16 - h;
+                <rect x="@x.ToString(System.Globalization.CultureInfo.InvariantCulture)" y="@y.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)"
+                      width="@barW.ToString(System.Globalization.CultureInfo.InvariantCulture)" height="@Math.Max(2, h).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)"
+                      rx="2" class="dash-bar">
+                    <title>@s.Date.ToString("MMM d"): @Money.Format(s.Revenue) (@s.Orders orders)</title>
+                </rect>
+                x += barW + barGap;
+            }
+        </svg>
+        <div class="dash-xaxis">
+            @foreach (var s in Model.Sales)
+            {
+                <span>@s.Date.ToString("d/M")</span>
+            }
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2 class="text-card-title mb-3">Top products</h2>
+        @if (Model.TopProducts.Count == 0)
+        {
+            <div class="empty-state-cell">
+                <icon name="trending-up" class="icon--lg" />
+                <span>No sales yet.</span>
+            </div>
+        }
+        else
+        {
+            <ol class="rank-list">
+                @foreach (var t in Model.TopProducts)
+                {
+                    <li>
+                        <a href="/p/@t.Slug" target="_blank">@t.Name</a>
+                        <span>@t.UnitsSold sold · @Money.Format(t.Revenue)</span>
+                    </li>
+                }
+            </ol>
+        }
+    </div>
+</div>
+
+<div class="dash-grid">
+    <div class="panel p-0">
+        <div class="panel-head">
+            <h2 class="text-card-title mb-0">Recent orders</h2>
+            <a asp-controller="Orders" asp-action="Index" class="small">All orders <icon name="chevron-right" class="icon--sm" /></a>
+        </div>
+        <table class="admin-table">
+            <thead><tr><th>Order</th><th>Customer</th><th class="num">Total</th><th>Status</th></tr></thead>
+            <tbody>
+            @if (Model.RecentOrders.Count == 0)
+            {
+                <tr><td colspan="4"><div class="empty-state-cell"><icon name="orders" class="icon--lg" /><span>No orders yet.</span></div></td></tr>
+            }
+            @foreach (var o in Model.RecentOrders)
+            {
+                <tr>
+                    <td><a asp-controller="Orders" asp-action="Details" asp-route-id="@o.Id">@o.OrderNumber</a><br /><span class="text-muted small">@o.PlacedAt.ToString("MMM d, HH:mm")</span></td>
+                    <td>@o.CustomerName<br /><span class="text-muted small">@o.CustomerEmail</span></td>
+                    <td class="num">@o.CurrencyCode @o.TotalAmount.ToString("0.00")</td>
+                    <td><span class="order-status @OrderUi.StatusClass(o.Status)">@o.Status</span></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="panel p-0">
+        <div class="panel-head">
+            <h2 class="text-card-title mb-0">Low stock</h2>
+            <a asp-controller="Products" asp-action="Index" class="small">Manage <icon name="chevron-right" class="icon--sm" /></a>
+        </div>
+        <table class="admin-table">
+            <thead><tr><th>Product</th><th>SKU</th><th class="num">Stock</th></tr></thead>
+            <tbody>
+            @if (Model.LowStock.Count == 0)
+            {
+                <tr><td colspan="3"><div class="empty-state-cell"><icon name="check" class="icon--lg" /><span>Everything is well stocked.</span></div></td></tr>
+            }
+            @foreach (var p in Model.LowStock)
+            {
+                <tr>
+                    <td><a asp-controller="Products" asp-action="Edit" asp-route-id="@p.ProductId">@p.Name</a>@if (!p.IsActive) { <span class="badge-status off ms-2">Hidden</span> }</td>
+                    <td class="text-muted">@p.Sku</td>
+                    <td class="num @(p.StockQuantity == 0 ? "text-danger" : "")"><strong>@p.StockQuantity</strong></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

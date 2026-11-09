@@ -1,0 +1,70 @@
+@model ECommerce.Web.Models.Orders.PaymentPageModel
+@inject ECommerce.Web.Infrastructure.IMoneyFormatter Money
+@{
+    ViewData["Title"] = "Payment";
+    var o = Model.Order;
+    var amount = Money.FormatIn(o.TotalAmount, o.CurrencyCode, o.ExchangeRate);
+}
+
+<div class="page">
+    <div class="container-x" style="max-width: 520px;">
+        <div class="pay-card">
+            <div class="pay-card__head">
+                <h1>Complete your payment</h1>
+                <p>Order <strong>@o.OrderNumber</strong></p>
+                <div class="pay-amount">@amount</div>
+                @if (o.PaymentStatus == ECommerce.Domain.Enums.PaymentStatus.Failed)
+                {
+                    <p class="text-danger small">Your last attempt was declined. Please try again.</p>
+                }
+            </div>
+
+            @if (Model.GatewayError is not null)
+            {
+                <div class="alert alert-danger">@Model.GatewayError</div>
+                <a class="btn btn-ghost w-100" asp-action="Pay" asp-route-orderNumber="@o.OrderNumber">Try again</a>
+            }
+            else
+            {
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 px-3 small"></div>
+
+                <form asp-action="Pay" asp-route-orderNumber="@o.OrderNumber" method="post" class="pay-form" autocomplete="off">
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-3">
+                        <label asp-for="Card.CardHolder" class="form-label"></label>
+                        <input asp-for="Card.CardHolder" class="form-control" placeholder="JANE DOE" />
+                        <span asp-validation-for="Card.CardHolder" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Card.CardNumber" class="form-label"></label>
+                        <input asp-for="Card.CardNumber" class="form-control" inputmode="numeric" placeholder="4242 4242 4242 4242" />
+                        <span asp-validation-for="Card.CardNumber" class="text-danger small"></span>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-6 mb-3">
+                            <label asp-for="Card.Expiry" class="form-label"></label>
+                            <input asp-for="Card.Expiry" class="form-control" placeholder="12/29" />
+                            <span asp-validation-for="Card.Expiry" class="text-danger small"></span>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label asp-for="Card.Cvc" class="form-label">CVC</label>
+                            <input asp-for="Card.Cvc" class="form-control" inputmode="numeric" placeholder="123" />
+                            <span asp-validation-for="Card.Cvc" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg w-100">Pay @amount</button>
+                </form>
+
+                <p class="pay-note">
+                    <strong>Demo gateway.</strong> No real charge is made. Use test card
+                    <code>4242 4242 4242 4242</code> to succeed, or a number ending in
+                    <code>0000</code> to simulate a decline.
+                </p>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

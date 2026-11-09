@@ -1,0 +1,12 @@
+@model ECommerce.Application.Orders.CouponEditModel
+
+<div class="admin-page-head"><h1 class="text-page-title">Edit coupon</h1></div>
+
+<form asp-action="Edit" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="UsedCount" />
+    <partial name="_Form" model="Model" />
+</form>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

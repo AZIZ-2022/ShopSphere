@@ -1,0 +1,35 @@
+@model List<ECommerce.Web.Models.BreadcrumbItem>
+
+@if (Model is { Count: > 0 })
+{
+    <div class="breadcrumb-bar">
+        <div class="container-x">
+            <nav aria-label="Breadcrumb">
+                <ol class="crumbs" itemscope itemtype="https://schema.org/BreadcrumbList">
+                    <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+                        <a itemprop="item" href="/"><span itemprop="name">Home</span></a>
+                        <meta itemprop="position" content="1" />
+                    </li>
+                    @for (var i = 0; i < Model.Count; i++)
+                    {
+                        var item = Model[i];
+                        var isLast = i == Model.Count - 1;
+                        <li class="sep" aria-hidden="true">/</li>
+                        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem"
+                            aria-current="@((isLast || item.Url is null) ? "page" : null)">
+                            @if (!isLast && item.Url is not null)
+                            {
+                                <a itemprop="item" href="@item.Url"><span itemprop="name">@item.Text</span></a>
+                            }
+                            else
+                            {
+                                <span itemprop="name">@item.Text</span>
+                            }
+                            <meta itemprop="position" content="@(i + 2)" />
+                        </li>
+                    }
+                </ol>
+            </nav>
+        </div>
+    </div>
+}

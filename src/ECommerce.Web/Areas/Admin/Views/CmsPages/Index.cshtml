@@ -1,0 +1,26 @@
+@model IReadOnlyList<ECommerce.Application.Cms.CmsPageListItem>
+
+<div class="admin-page-head">
+    <h1 class="text-page-title">Pages</h1>
+</div>
+
+<p class="text-muted-sm mb-3">Edit the content, SEO text, and publish state of each static page. The set of pages is fixed.</p>
+
+<div class="panel p-0">
+    <table class="admin-table">
+        <thead><tr><th>Page</th><th>Slug</th><th>Status</th><th class="actions"></th></tr></thead>
+        <tbody>
+        @foreach (var p in Model)
+        {
+            <tr>
+                <td><strong>@p.Title</strong></td>
+                <td class="text-muted">/@p.Slug</td>
+                <td>@if (p.IsPublished) { <span class="badge-status on">Published</span> } else { <span class="badge-status off">Unpublished</span> }</td>
+                <td class="actions">
+                    <a class="btn btn-ghost btn-sm" asp-action="Edit" asp-route-id="@p.Id"><icon name="edit" class="icon--sm" /> Edit</a>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

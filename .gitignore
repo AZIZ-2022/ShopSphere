@@ -1,0 +1,25 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+[Dd]ebug/
+[Rr]elease/
+artifacts/
+TestResults/
+
+## Rider / VS Code
+.idea/
+.vscode/
+
+## App runtime
+src/ECommerce.Web/wwwroot/uploads/
+src/**/App_Data/logs/
+src/**/App_Data/sent-emails/
+*.db
+*.db-shm
+*.db-wal
+
+## User secrets are machine-local
+secrets.json

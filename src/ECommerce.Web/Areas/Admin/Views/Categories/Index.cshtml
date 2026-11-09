@@ -1,0 +1,46 @@
+@model IReadOnlyList<ECommerce.Application.Catalog.Admin.AdminCategoryListItem>
+
+<div class="admin-page-head">
+    <h1 class="text-page-title">Categories</h1>
+    <a class="btn btn-primary" asp-action="Create"><icon name="plus" class="icon--sm" /> New category</a>
+</div>
+
+<div class="panel p-0">
+    <table class="admin-table">
+        <thead>
+            <tr><th>Name</th><th>Slug</th><th class="num">Products</th><th>Status</th><th class="actions"></th></tr>
+        </thead>
+        <tbody>
+        @if (Model.Count == 0)
+        {
+            <tr><td colspan="5"><div class="empty-state-cell"><icon name="categories" class="icon--lg" /><span>No categories yet.</span></div></td></tr>
+        }
+        @foreach (var c in Model)
+        {
+            <tr>
+                <td><span style="display:inline-block;width:@(c.Depth * 20)px"></span>@(c.Depth > 0 ? "└ " : "")<strong>@c.Name</strong></td>
+                <td class="text-muted">/@c.Slug</td>
+                <td class="num">@c.ProductCount</td>
+                <td>
+                    @if (c.IsActive)
+                    {
+                        <span class="badge-status on">Active</span>
+                    }
+                    else
+                    {
+                        <span class="badge-status off">Hidden</span>
+                    }
+                </td>
+                <td class="actions">
+                    <a class="btn btn-ghost btn-sm" asp-action="Edit" asp-route-id="@c.Id"><icon name="edit" class="icon--sm" /> Edit</a>
+                    <form asp-action="Delete" asp-route-id="@c.Id" method="post" class="d-inline"
+                          onsubmit="return confirm('Delete category &quot;@c.Name&quot;?');">
+                        @Html.AntiForgeryToken()
+                        <button class="btn btn-danger-ghost btn-sm" type="submit"><icon name="delete" class="icon--sm" /> Delete</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

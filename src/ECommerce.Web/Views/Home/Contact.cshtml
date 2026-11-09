@@ -1,0 +1,52 @@
+@model ECommerce.Web.Models.Home.ContactFormModel
+@inject ECommerce.Application.Common.Interfaces.ISiteSettingsService SiteSettings
+@{
+    ViewData["Title"] = "Contact Us";
+    var s = await SiteSettings.GetAsync();
+}
+
+<div class="page">
+    <div class="container-x">
+        <h1 class="mb-4">Contact Us</h1>
+        <div class="contact-layout">
+            <div class="panel">
+                <h2 class="text-section-title mb-3">Send us a message</h2>
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 px-3 small"></div>
+                <form asp-action="Contact" method="post" class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="Name" class="form-label">Your name</label>
+                        <input asp-for="Name" class="form-control" />
+                        <span asp-validation-for="Name" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Email" class="form-label">Email</label>
+                        <input asp-for="Email" class="form-control" />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="Subject" class="form-label">Subject (optional)</label>
+                        <input asp-for="Subject" class="form-control" />
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="Message" class="form-label">Message</label>
+                        <textarea asp-for="Message" class="form-control" rows="5"></textarea>
+                        <span asp-validation-for="Message" class="text-danger small"></span>
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">Send message</button>
+                    </div>
+                </form>
+            </div>
+
+            <aside class="panel contact-info">
+                <h2 class="text-section-title mb-3">Get in touch</h2>
+                @if (!string.IsNullOrEmpty(s.ContactAddress)) { <p><strong>Address</strong><br />@s.ContactAddress</p> }
+                @if (!string.IsNullOrEmpty(s.ContactPhone)) { <p><strong>Phone</strong><br /><a href="tel:@s.ContactPhone.Replace(" ", "")">@s.ContactPhone</a></p> }
+                @if (!string.IsNullOrEmpty(s.ContactEmail)) { <p><strong>Email</strong><br /><a href="mailto:@s.ContactEmail">@s.ContactEmail</a></p> }
+                @if (!string.IsNullOrEmpty(s.BusinessHours)) { <p><strong>Business hours</strong><br />@s.BusinessHours</p> }
+            </aside>
+        </div>
+    </div>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

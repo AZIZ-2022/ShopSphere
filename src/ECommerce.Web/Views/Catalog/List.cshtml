@@ -1,0 +1,189 @@
+@model ECommerce.Web.Models.Catalog.CatalogListViewModel
+@inject ECommerce.Web.Infrastructure.IMoneyFormatter Money
+@{
+    var catMeta = Model.Kind == ECommerce.Web.Models.Catalog.CatalogListKind.Category ? Model.Result.Category : null;
+    ViewData["Title"] = string.IsNullOrWhiteSpace(catMeta?.MetaTitle) ? Model.Heading : catMeta.MetaTitle;
+    ViewData["MetaDescription"] = string.IsNullOrWhiteSpace(catMeta?.MetaDescription) ? Model.SubHeading : catMeta.MetaDescription;
+    var r = Model.Result;
+    var products = r.Products;
+    var q = Model.Query;
+}
+
+<div class="page">
+    <div class="container-x">
+
+        <header class="catalog-head">
+            <h1>@Model.Heading</h1>
+            @if (!string.IsNullOrWhiteSpace(Model.SubHeading))
+            {
+                <p>@Model.SubHeading</p>
+            }
+        </header>
+
+        @if (Model.Kind == ECommerce.Web.Models.Catalog.CatalogListKind.Category && r.Category?.Children.Count > 0)
+        {
+            <div class="subcat-chips">
+                @foreach (var child in r.Category.Children)
+                {
+                    <a class="chip" href="/c/@child.Slug">@child.Name</a>
+                }
+            </div>
+        }
+
+        <div class="catalog-layout">
+            <aside class="catalog-filters" id="catalogFilters">
+                <form method="get" action="@Model.BasePath" class="filters-form">
+                    @if (!string.IsNullOrWhiteSpace(q.SearchTerm))
+                    {
+                        <input type="hidden" name="q" value="@q.SearchTerm" />
+                    }
+                    <input type="hidden" name="sort" value="@((int)q.Sort)" />
+
+                    <div class="filter-block">
+                        <div class="filter-block__head">
+                            <h2>Filters</h2>
+                            @if (Model.HasActiveFilters)
+                            {
+                                <a class="filter-clear" href="@Model.BasePath">Clear all</a>
+                            }
+                        </div>
+                    </div>
+
+                    @if (r.BrandFacets.Count > 0)
+                    {
+                        <div class="filter-block">
+                            <h3>Brand</h3>
+                            <div class="filter-options">
+                                @foreach (var b in r.BrandFacets)
+                                {
+                                    <label class="filter-check">
+                                        <input type="checkbox" name="brand" value="@b.Slug" @(Model.BrandSelected(b.Slug) ? "checked" : "") />
+                                        <span>@b.Name</span>
+                                        <span class="filter-count">@b.Count</span>
+                                    </label>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <div class="filter-block">
+                        <h3>Price</h3>
+                        <div class="price-inputs">
+                            <input type="number" name="min" min="0" step="1" placeholder="Min" value="@(q.MinPrice?.ToString("0.##"))" />
+                            <span>–</span>
+                            <input type="number" name="max" min="0" step="1" placeholder="Max" value="@(q.MaxPrice?.ToString("0.##"))" />
+                        </div>
+                        <p class="filter-hint">Available: @Money.Format(r.MinPriceAvailable) – @Money.Format(r.MaxPriceAvailable)</p>
+                    </div>
+
+                    <div class="filter-block">
+                        <h3>Rating</h3>
+                        <div class="filter-options">
+                            @foreach (var star in new[] { 4, 3, 2 })
+                            {
+                                <label class="filter-check">
+                                    <input type="radio" name="rating" value="@star" @(q.MinRating == star ? "checked" : "") />
+                                    <span>@star★ &amp; up</span>
+                                </label>
+                            }
+                            <label class="filter-check">
+                                <input type="radio" name="rating" value="" @(q.MinRating is null ? "checked" : "") />
+                                <span>Any rating</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="filter-block">
+                        <label class="filter-check">
+                            <input type="checkbox" name="instock" value="true" @(q.InStockOnly ? "checked" : "") />
+                            <span>In stock only</span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">Apply filters</button>
+                </form>
+            </aside>
+
+            <div class="catalog-main">
+                <div class="catalog-toolbar">
+                    <button type="button" class="btn btn-ghost btn-sm d-lg-none" data-toggle-filters>Filters</button>
+                    <span class="catalog-count">
+                        @if (products.TotalCount == 0)
+                        {
+                            <text>No products</text>
+                        }
+                        else
+                        {
+                            <text>Showing @(((products.Page - 1) * products.PageSize) + 1)–@Math.Min(products.Page * products.PageSize, products.TotalCount) of @products.TotalCount</text>
+                        }
+                    </span>
+                    <label class="catalog-sort">
+                        Sort
+                        <select onchange="location.href = this.value">
+                            @foreach (var opt in Model.SortOptions)
+                            {
+                                <option value="@Model.BuildUrl(sort: opt.Value, page: 1)" selected="@(q.Sort == opt.Value)">@opt.Label</option>
+                            }
+                        </select>
+                    </label>
+                </div>
+
+                @if (Model.HasActiveFilters)
+                {
+                    <div class="active-filters">
+                        @foreach (var b in Model.Query.Brands)
+                        {
+                            <a class="active-filter" href="@Model.BuildUrl(toggleBrand: b, page: 1)">@b <span aria-hidden="true">×</span></a>
+                        }
+                        @if (q.MinPrice is not null || q.MaxPrice is not null)
+                        {
+                            <a class="active-filter" href="@Model.BuildUrl(clearPrice: true, page: 1)">
+                                @(q.MinPrice is { } mn ? Money.Format(mn) : "0") – @(q.MaxPrice is { } mx ? Money.Format(mx) : "∞") <span aria-hidden="true">×</span>
+                            </a>
+                        }
+                        @if (q.MinRating is { } rt)
+                        {
+                            <a class="active-filter" href="@Model.BuildUrl(clearRating: true, page: 1)">@rt★ &amp; up <span aria-hidden="true">×</span></a>
+                        }
+                        @if (q.InStockOnly)
+                        {
+                            <a class="active-filter" href="@Model.BuildUrl(inStock: false, page: 1)">In stock <span aria-hidden="true">×</span></a>
+                        }
+                    </div>
+                }
+
+                @if (products.TotalCount == 0)
+                {
+                    <div class="state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        <h3>No products match</h3>
+                        <p>Try removing a filter or searching for something else.</p>
+                        @if (Model.HasActiveFilters)
+                        {
+                            <a class="btn btn-ghost" href="@Model.BasePath">Clear filters</a>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="product-grid">
+                        @foreach (var p in products.Items)
+                        {
+                            <partial name="_ProductCard" model="p" />
+                        }
+                    </div>
+
+                    <partial name="_Pagination" model="@(new ECommerce.Web.Models.Catalog.PagerModel(products.Page, products.TotalPages, page => Model.BuildUrl(page: page)))" />
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.querySelector('[data-toggle-filters]')?.addEventListener('click', function () {
+            document.getElementById('catalogFilters')?.classList.toggle('is-open');
+        });
+    </script>
+}

@@ -1,0 +1,45 @@
+@model ECommerce.Web.Models.Orders.TrackOrderModel
+@{
+    ViewData["Title"] = "Track Order";
+}
+
+<div class="page">
+    <div class="container-x" style="max-width: 720px;">
+        <h1 class="mb-3">Track your order</h1>
+        <p class="text-muted">Enter your order number and the email address used at checkout.</p>
+
+        <form asp-action="Track" method="post" class="panel">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 px-3 small"></div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="OrderNumber" class="form-label"></label>
+                    <input asp-for="OrderNumber" class="form-control" placeholder="ORD-20260908-0001" />
+                    <span asp-validation-for="OrderNumber" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+                <div class="col-12"><button type="submit" class="btn btn-primary">Track order</button></div>
+            </div>
+        </form>
+
+        @if (Model.Result is not null)
+        {
+            var o = Model.Result;
+            <div class="panel mt-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="text-section-title mb-0">@o.OrderNumber</h2>
+                    <span class="order-status @ECommerce.Web.Infrastructure.OrderUi.StatusClass(o.Status)">@o.Status</span>
+                </div>
+                <partial name="_OrderTimeline" model="o" />
+                <hr />
+                <partial name="_OrderSummary" model="o" />
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

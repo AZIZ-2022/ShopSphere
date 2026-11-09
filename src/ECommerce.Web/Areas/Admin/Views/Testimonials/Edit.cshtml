@@ -1,0 +1,8 @@
+@model ECommerce.Application.Cms.TestimonialEditModel
+<div class="admin-page-head"><h1 class="text-page-title">Edit testimonial</h1></div>
+<form asp-action="Edit" method="post" enctype="multipart/form-data">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    <partial name="_Form" model="Model" />
+</form>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

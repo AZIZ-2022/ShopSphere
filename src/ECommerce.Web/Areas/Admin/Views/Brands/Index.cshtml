@@ -1,0 +1,35 @@
+@model IReadOnlyList<ECommerce.Application.Catalog.Admin.AdminBrandListItem>
+
+<div class="admin-page-head">
+    <h1 class="text-page-title">Brands</h1>
+    <a class="btn btn-primary" asp-action="Create"><icon name="plus" class="icon--sm" /> New brand</a>
+</div>
+
+<div class="panel p-0">
+    <table class="admin-table">
+        <thead><tr><th>Name</th><th>Slug</th><th class="num">Products</th><th>Status</th><th class="actions"></th></tr></thead>
+        <tbody>
+        @if (Model.Count == 0)
+        {
+            <tr><td colspan="5"><div class="empty-state-cell"><icon name="brands" class="icon--lg" /><span>No brands yet.</span></div></td></tr>
+        }
+        @foreach (var b in Model)
+        {
+            <tr>
+                <td><strong>@b.Name</strong></td>
+                <td class="text-muted">/@b.Slug</td>
+                <td class="num">@b.ProductCount</td>
+                <td>@if (b.IsActive) { <span class="badge-status on">Active</span> } else { <span class="badge-status off">Hidden</span> }</td>
+                <td class="actions">
+                    <a class="btn btn-ghost btn-sm" asp-action="Edit" asp-route-id="@b.Id"><icon name="edit" class="icon--sm" /> Edit</a>
+                    <form asp-action="Delete" asp-route-id="@b.Id" method="post" class="d-inline"
+                          onsubmit="return confirm('Delete brand &quot;@b.Name&quot;?');">
+                        @Html.AntiForgeryToken()
+                        <button class="btn btn-danger-ghost btn-sm" type="submit"><icon name="delete" class="icon--sm" /> Delete</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

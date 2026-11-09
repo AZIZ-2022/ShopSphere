@@ -1,0 +1,62 @@
+@model ECommerce.Application.Catalog.Admin.BrandEditModel
+
+<div asp-validation-summary="All" class="alert alert-danger py-2 px-3 small"></div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="panel">
+            <p class="text-eyebrow mb-3">Basic info</p>
+            <div class="mb-3">
+                <label class="form-label">Name <span class="required-mark">*</span></label>
+                <input asp-for="Name" class="form-control" autofocus />
+                <span asp-validation-for="Name" class="text-danger small"></span>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Slug <span class="text-muted">(optional)</span></label>
+                <input asp-for="Slug" class="form-control" placeholder="auto" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Description</label>
+                <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="mb-0">
+                <label class="form-label">Logo</label>
+                @if (!string.IsNullOrEmpty(Model.LogoUrl))
+                {
+                    <div class="mb-2"><img src="@Model.LogoUrl" alt="" style="width:80px;height:80px;object-fit:contain;border-radius:var(--radius-sm);border:1px solid var(--c-line)" /></div>
+                }
+                <input type="hidden" asp-for="LogoUrl" />
+                <input type="file" name="logoFile" class="form-control" accept="image/*" />
+                <p class="field-hint">JPG/PNG/WebP, max 3 MB. Leave empty to keep the current logo.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="panel">
+            <p class="text-eyebrow mb-3">Visibility</p>
+            <div class="mb-3">
+                <label class="form-label">Display order</label>
+                <input asp-for="DisplayOrder" type="number" class="form-control" />
+            </div>
+            <div class="form-check">
+                <input asp-for="IsActive" class="form-check-input" />
+                <label asp-for="IsActive" class="form-check-label">Visible in storefront</label>
+            </div>
+        </div>
+        <div class="panel">
+            <p class="text-eyebrow mb-3">SEO <span class="text-muted">(optional)</span></p>
+            <div class="mb-3">
+                <label class="form-label">Meta title</label>
+                <input asp-for="MetaTitle" class="form-control" maxlength="200" placeholder="@Model.Name" />
+            </div>
+            <div class="mb-0">
+                <label class="form-label">Meta description</label>
+                <textarea asp-for="MetaDescription" class="form-control" rows="2" maxlength="300"></textarea>
+            </div>
+        </div>
+        <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary"><icon name="save" class="icon--sm" /> Save</button>
+            <a class="btn btn-ghost" asp-action="Index"><icon name="close" class="icon--sm" /> Cancel</a>
+        </div>
+    </div>
+</div>

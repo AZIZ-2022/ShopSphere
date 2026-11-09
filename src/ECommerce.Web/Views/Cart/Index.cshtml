@@ -1,0 +1,107 @@
+@model ECommerce.Application.Cart.CartDto
+@inject ECommerce.Web.Infrastructure.IMoneyFormatter Money
+@{
+    ViewData["Title"] = "Shopping Cart";
+}
+
+<div class="page">
+    <div class="container-x">
+        <h1 class="mb-4">Shopping Cart</h1>
+
+        @if (Model.RemovedItemNames.Count > 0)
+        {
+            <div class="alert alert-warning alert-dismissible fade show">
+                <icon name="warning" class="icon--sm" />
+                @(Model.RemovedItemNames.Count == 1
+                    ? $"“{Model.RemovedItemNames[0]}” was removed from your cart because it's no longer available."
+                    : $"These items were removed from your cart because they're no longer available: {string.Join(", ", Model.RemovedItemNames)}.")
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        @if (Model.IsEmpty)
+        {
+            <div class="state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg>
+                <h3>Your cart is empty</h3>
+                <p>Browse the store and add something you like.</p>
+                <a class="btn btn-primary" href="/">Start shopping</a>
+            </div>
+        }
+        else
+        {
+            <div class="cart-layout">
+                <div class="cart-lines">
+                    @foreach (var line in Model.Lines)
+                    {
+                        <div class="cart-line">
+                            <a class="cart-line__thumb" href="/p/@line.Slug">
+                                @if (!string.IsNullOrEmpty(line.ImageUrl)) { <img src="@line.ImageUrl" alt="@line.Name" /> }
+                            </a>
+                            <div class="cart-line__main">
+                                <a class="cart-line__name" href="/p/@line.Slug">@line.Name</a>
+                                <div class="cart-line__unit">@Money.Format(line.UnitPrice) each</div>
+                                @if (line.ExceedsStock)
+                                {
+                                    <div class="text-danger small">Only @line.StockAvailable left — please reduce quantity.</div>
+                                }
+                            </div>
+
+                            <form class="cart-line__qty" asp-controller="Cart" asp-action="Update" method="post" data-cart-qty-form>
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="productId" value="@line.ProductId" />
+                                <div class="qty-stepper">
+                                    <button type="button" data-qty-dec>−</button>
+                                    <input type="number" name="quantity" value="@line.Quantity" min="1" max="@Math.Max(line.StockAvailable, 1)" aria-label="Quantity" />
+                                    <button type="button" data-qty-inc>+</button>
+                                </div>
+                                <button type="submit" class="cart-line__update btn btn-ghost btn-sm">Update</button>
+                            </form>
+
+                            <div class="cart-line__total">@Money.Format(line.LineTotal)</div>
+
+                            <form asp-controller="Cart" asp-action="Remove" method="post" class="cart-line__remove">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="productId" value="@line.ProductId" />
+                                <button type="submit" class="btn-icon-x" aria-label="Remove item"><icon name="close" class="icon--sm" /></button>
+                            </form>
+                        </div>
+                    }
+                    <a href="/" class="cart-continue"><icon name="arrow-left" class="icon--sm" /> Continue shopping</a>
+                </div>
+
+                <aside class="cart-summary">
+                    <h2>Order summary</h2>
+                    <dl>
+                        <div><dt>Subtotal (@Model.ItemCount items)</dt><dd>@Money.Format(Model.SubTotal)</dd></div>
+                        <div>
+                            <dt>Shipping</dt>
+                            <dd>@(Model.ShippingCost == 0 ? "Free" : Money.Format(Model.ShippingCost))</dd>
+                        </div>
+                    </dl>
+
+                    @if (Model.FreeShippingThreshold > 0 && !Model.QualifiesForFreeShipping)
+                    {
+                        var pct = (int)Math.Min(100, Model.SubTotal / Model.FreeShippingThreshold * 100);
+                        <div class="freeship">
+                            <div class="freeship__bar"><span style="width:@pct%"></span></div>
+                            <p>Add <strong>@Money.Format(Model.AmountToFreeShipping)</strong> more for free shipping.</p>
+                        </div>
+                    }
+                    else if (Model.QualifiesForFreeShipping)
+                    {
+                        <p class="freeship freeship--done">🎉 You've unlocked free shipping!</p>
+                    }
+
+                    <div class="cart-summary__total">
+                        <span>Total</span>
+                        <strong>@Money.Format(Model.GrandTotal)</strong>
+                    </div>
+
+                    <a class="btn btn-primary btn-lg w-100" asp-controller="Checkout" asp-action="Index">Proceed to checkout</a>
+                    <p class="text-muted small mt-2 text-center">Checkout goes live in Phase 7.</p>
+                </aside>
+            </div>
+        }
+    </div>
+</div>

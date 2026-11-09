@@ -1,0 +1,79 @@
+@inject ECommerce.Application.Common.Interfaces.ISiteSettingsService SiteSettings
+@{
+    var settings = await SiteSettings.GetAsync();
+    var pageTitle = ViewData["Title"] as string;
+    var fullTitle = string.IsNullOrWhiteSpace(pageTitle) ? settings.SiteName : $"{pageTitle} · {settings.SiteName}";
+
+    var primary = ThemeCatalog.IsValidHex(settings.ThemePrimaryColor) ? settings.ThemePrimaryColor : "#2563eb";
+    var accent = ThemeCatalog.IsValidHex(settings.ThemeAccentColor) ? settings.ThemeAccentColor : "#ef4444";
+    var favicon = string.IsNullOrWhiteSpace(settings.FaviconUrl) ? Url.Content("~/favicon.ico") : settings.FaviconUrl;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@fullTitle</title>
+    <meta name="description" content="@(ViewData["MetaDescription"] as string ?? settings.Tagline)" />
+    <link rel="icon" href="@favicon" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="@ThemeCatalog.GoogleFontsHref(settings.ThemeFontFamily)" rel="stylesheet" />
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/ECommerce.Web.styles.css" asp-append-version="true" />
+    <style>
+        :root {
+            --font-sans: @Html.Raw(ThemeCatalog.FontStack(settings.ThemeFontFamily));
+            --c-primary: @primary;
+            --c-primary-dark: @ThemeCatalog.Darken(primary);
+            --c-primary-soft: @ThemeCatalog.Soften(primary);
+            --c-accent: @accent;
+            --c-accent-dark: @ThemeCatalog.Darken(accent);
+            --radius-sm: @ThemeCatalog.ButtonRadius(settings.ThemeButtonStyle);
+        }
+    </style>
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <a class="visually-hidden-focusable" href="#main-content">Skip to content</a>
+
+    @await Component.InvokeAsync("SiteHeader")
+
+    @await Component.InvokeAsync("Breadcrumb")
+
+    @if (TempData["Flash"] is string flash && !string.IsNullOrWhiteSpace(flash))
+    {
+        <div class="container-x mt-3">
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @flash
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    }
+    @if (TempData["FlashError"] is string flashError && !string.IsNullOrWhiteSpace(flashError))
+    {
+        <div class="container-x mt-3">
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                @flashError
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    }
+
+    <main id="main-content" role="main">
+        @RenderBody()
+    </main>
+
+    @await Component.InvokeAsync("SiteFooter")
+
+    <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

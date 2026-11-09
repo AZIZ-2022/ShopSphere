@@ -1,0 +1,29 @@
+@model ECommerce.Web.ViewComponents.CurrencySwitcherViewModel
+
+@if (Model.Options.Count > 1)
+{
+    <div class="dropdown currency-switch">
+        <button class="dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Change currency">
+            @ECommerce.Web.ViewComponents.CurrencySwitcherViewModel.Symbol(Model.Current) @Model.Current
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+            @foreach (var code in Model.Options)
+            {
+                <li>
+                    <form asp-controller="Preferences" asp-action="SetCurrency" method="post" class="d-grid">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="code" value="@code" />
+                        <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+                        <button type="submit" class="dropdown-item @(code == Model.Current ? "active" : "")">
+                            @ECommerce.Web.ViewComponents.CurrencySwitcherViewModel.Symbol(code) &nbsp;@code
+                        </button>
+                    </form>
+                </li>
+            }
+        </ul>
+    </div>
+}
+else
+{
+    <span class="currency-switch"><span class="dropdown-toggle disabled">@ECommerce.Web.ViewComponents.CurrencySwitcherViewModel.Symbol(Model.Current) @Model.Current</span></span>
+}

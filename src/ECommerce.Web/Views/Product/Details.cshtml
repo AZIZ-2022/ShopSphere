@@ -1,0 +1,209 @@
+@model ECommerce.Web.Models.Catalog.ProductDetailViewModel
+@inject ECommerce.Web.Infrastructure.IMoneyFormatter Money
+@inject ECommerce.Application.Common.Features.IFeatureFlagService Features
+@{
+    var p = Model.Product;
+    ViewData["Title"] = string.IsNullOrWhiteSpace(p.MetaTitle) ? p.Name : p.MetaTitle;
+    ViewData["MetaDescription"] = string.IsNullOrWhiteSpace(p.MetaDescription) ? p.ShortDescription : p.MetaDescription;
+    var mainImage = p.Images.FirstOrDefault()?.ImageUrl;
+    var wishlistOn = await Features.IsEnabledAsync(ECommerce.Application.Common.Features.FeatureFlagKeys.Wishlist);
+    var reviewsOn = await Features.IsEnabledAsync(ECommerce.Application.Common.Features.FeatureFlagKeys.Reviews);
+}
+
+<div class="page">
+    <div class="container-x">
+        <div class="pdp">
+            <div class="pdp__gallery">
+                <div class="pdp__main">
+                    @if (mainImage is not null)
+                    {
+                        <img id="pdpMainImage" src="@mainImage" alt="@p.Name" />
+                    }
+                    else
+                    {
+                        <span class="product-card__noimg">No image</span>
+                    }
+                </div>
+                @if (p.Images.Count > 1)
+                {
+                    <div class="pdp__thumbs">
+                        @foreach (var img in p.Images)
+                        {
+                            <button type="button" class="pdp__thumb" data-full="@img.ImageUrl">
+                                <img src="@img.ImageUrl" alt="@img.AltText" loading="lazy" />
+                            </button>
+                        }
+                    </div>
+                }
+            </div>
+
+            <div class="pdp__info">
+                @if (!string.IsNullOrEmpty(p.BrandName))
+                {
+                    <a class="pdp__brand" href="/c/@p.CategorySlug">@p.BrandName</a>
+                }
+                <h1 class="pdp__title">@p.Name</h1>
+
+                <div class="pdp__rating">
+                    @if (reviewsOn)
+                    {
+                        @if (p.ReviewCount > 0)
+                        {
+                            <partial name="_StarRating" model="new ECommerce.Web.Models.Catalog.StarRating((double)p.AverageRating, p.ReviewCount)" />
+                            <a href="#reviews">Read reviews</a>
+                        }
+                        else
+                        {
+                            <span class="text-muted">No reviews yet</span>
+                        }
+                    }
+                    <span class="pdp__sku">SKU: @p.Sku</span>
+                </div>
+
+                <div class="pdp__price">
+                    <span class="price-now">@Money.Format(p.EffectivePrice)</span>
+                    @if (p.DiscountPercent > 0)
+                    {
+                        <span class="price-was">@Money.Format(p.Price)</span>
+                        <span class="badge-pill badge-pill--sale">Save @p.DiscountPercent%</span>
+                    }
+                </div>
+
+                <div class="pdp__stock @(p.InStock ? "in" : "out")">
+                    @(p.InStock ? $"In stock ({p.StockQuantity} available)" : "Currently out of stock")
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(p.ShortDescription))
+                {
+                    <p class="pdp__lede">@p.ShortDescription</p>
+                }
+
+                <div class="pdp__buy">
+                    <div class="qty-stepper">
+                        <button type="button" data-qty-dec>−</button>
+                        <input type="number" value="1" min="1" max="@Math.Max(p.StockQuantity, 1)" inputmode="numeric" aria-label="Quantity" />
+                        <button type="button" data-qty-inc>+</button>
+                    </div>
+                    <button type="button" class="btn btn-primary btn-lg" data-add-to-cart data-product-id="@p.Id" @(p.InStock ? "" : "disabled")>
+                        Add to cart
+                    </button>
+                    @if (wishlistOn)
+                    {
+                        <button type="button" class="icon-heart icon-heart--lg" data-wishlist-toggle data-product-id="@p.Id" aria-label="Add to wishlist">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+                        </button>
+                    }
+                </div>
+
+                <dl class="pdp__meta">
+                    <div><dt>Category</dt><dd><a href="/c/@p.CategorySlug">@p.CategoryName</a></dd></div>
+                    @if (!string.IsNullOrEmpty(p.BrandName))
+                    {
+                        <div><dt>Brand</dt><dd>@p.BrandName</dd></div>
+                    }
+                </dl>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(p.Description))
+        {
+            <section class="pdp-section">
+                <h2>Description</h2>
+                <div class="pdp-prose">@Html.Raw(p.Description)</div>
+            </section>
+        }
+
+        @if (reviewsOn)
+        {
+        <section class="pdp-section" id="reviews">
+            <h2>Customer reviews (@p.ReviewCount)</h2>
+
+            <div class="reviews-layout">
+                <div class="reviews-list">
+                    @if (p.Reviews.Count == 0)
+                    {
+                        <p class="text-muted">Be the first to review this product.</p>
+                    }
+                    else
+                    {
+                        foreach (var rev in p.Reviews)
+                        {
+                            <article class="review">
+                                <div class="review__head">
+                                    <partial name="_StarRating" model="new ECommerce.Web.Models.Catalog.StarRating(rev.Rating, 0, false)" />
+                                    <strong>@rev.ReviewerName</strong>
+                                    <time>@rev.CreatedAt.ToString("MMM d, yyyy")</time>
+                                </div>
+                                @if (!string.IsNullOrWhiteSpace(rev.Title))
+                                {
+                                    <h3 class="review__title">@rev.Title</h3>
+                                }
+                                <p class="review__body">@rev.Comment</p>
+                            </article>
+                        }
+                    }
+                </div>
+
+                <div class="review-form-wrap">
+                    @if (TempData["FlashError"] is string fe)
+                    {
+                        <div class="alert alert-danger py-2 px-3 small">@fe</div>
+                    }
+                    @if (Model.CanReview)
+                    {
+                        <form asp-controller="Product" asp-action="Review" asp-route-slug="@p.Slug" method="post" class="review-form">
+                            <h3>Write a review</h3>
+                            <div asp-validation-summary="All" class="text-danger small"></div>
+                            <input type="hidden" asp-for="ReviewForm.ProductId" value="@p.Id" />
+
+                            <div class="rating-input" role="radiogroup" aria-label="Your rating">
+                                @for (var i = 5; i >= 1; i--)
+                                {
+                                    <input type="radio" id="star@i" name="ReviewForm.Rating" value="@i" @(Model.ReviewForm.Rating == i ? "checked" : "") />
+                                    <label for="star@i" title="@i stars">★</label>
+                                }
+                            </div>
+
+                            <input asp-for="ReviewForm.Title" class="form-control" placeholder="Title (optional)" />
+                            <textarea asp-for="ReviewForm.Comment" class="form-control" rows="4" placeholder="What did you think?"></textarea>
+                            <button type="submit" class="btn btn-primary">Submit review</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <div class="review-cta">
+                            <p>Want to share your thoughts?</p>
+                            <a class="btn btn-ghost" asp-controller="Account" asp-action="Login" asp-route-returnUrl="@($"/p/{p.Slug}")">Log in to review</a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </section>
+        }
+
+        @if (Model.Related.Count > 0)
+        {
+            <section class="pdp-section">
+                <h2>You may also like</h2>
+                <div class="product-grid">
+                    @foreach (var rel in Model.Related)
+                    {
+                        <partial name="_ProductCard" model="rel" />
+                    }
+                </div>
+            </section>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.querySelectorAll('.pdp__thumb').forEach(function (t) {
+            t.addEventListener('click', function () {
+                var img = document.getElementById('pdpMainImage');
+                if (img) { img.src = t.getAttribute('data-full'); }
+            });
+        });
+    </script>
+}

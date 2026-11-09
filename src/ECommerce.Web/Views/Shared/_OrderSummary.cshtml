@@ -1,0 +1,43 @@
+@model ECommerce.Application.Orders.OrderDto
+@inject ECommerce.Web.Infrastructure.IMoneyFormatter Money
+@{
+    string M(decimal v) => Money.FormatIn(v, Model.CurrencyCode, Model.ExchangeRate);
+}
+
+<div class="order-items">
+    @foreach (var item in Model.Items)
+    {
+        <div class="order-item">
+            <div class="order-item__thumb">
+                @if (!string.IsNullOrEmpty(item.ImageUrl)) { <img src="@item.ImageUrl" alt="" /> }
+            </div>
+            <div class="order-item__main">
+                @if (!string.IsNullOrEmpty(item.Slug))
+                {
+                    <a href="/p/@item.Slug" class="order-item__name">@item.ProductName</a>
+                }
+                else
+                {
+                    <span class="order-item__name">@item.ProductName</span>
+                }
+                <span class="order-item__sku">SKU @item.Sku</span>
+            </div>
+            <div class="order-item__qty">@M(item.UnitPrice) × @item.Quantity</div>
+            <div class="order-item__total">@M(item.LineTotal)</div>
+        </div>
+    }
+</div>
+
+<dl class="order-totals">
+    <div><dt>Subtotal</dt><dd>@M(Model.SubTotal)</dd></div>
+    @if (Model.DiscountAmount > 0)
+    {
+        <div class="is-discount"><dt>Discount @(Model.CouponCode is not null ? $"({Model.CouponCode})" : "")</dt><dd>−@M(Model.DiscountAmount)</dd></div>
+    }
+    <div><dt>Shipping</dt><dd>@(Model.ShippingCost == 0 ? "Free" : M(Model.ShippingCost))</dd></div>
+    @if (Model.TaxAmount > 0)
+    {
+        <div><dt>Tax</dt><dd>@M(Model.TaxAmount)</dd></div>
+    }
+    <div class="is-total"><dt>Total</dt><dd>@M(Model.TotalAmount)</dd></div>
+</dl>

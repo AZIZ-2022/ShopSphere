@@ -1,0 +1,268 @@
+@using ECommerce.Application.Home
+@model ECommerce.Application.Home.HomePageDto
+@{
+    ViewData["Title"] = null;
+    HomeSectionMeta? Meta(string key) => Model.SectionMeta.TryGetValue(key, out var m) ? m : null;
+}
+
+@foreach (var key in Model.SectionOrder)
+{
+    switch (key)
+    {
+        case HomeSectionKeys.HeroSlider:
+            @if (Model.Slides.Count > 0)
+            {
+                <section class="hero-slider">
+                    <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5500">
+                        <div class="carousel-indicators">
+                            @for (var i = 0; i < Model.Slides.Count; i++)
+                            {
+                                <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="@i"
+                                        class="@(i == 0 ? "active" : "")" aria-label="Slide @(i + 1)"></button>
+                            }
+                        </div>
+                        <div class="carousel-inner">
+                            @for (var i = 0; i < Model.Slides.Count; i++)
+                            {
+                                var s = Model.Slides[i];
+                                <div class="carousel-item @(i == 0 ? "active" : "")">
+                                    <div class="hero-slide" style="background-image:url('@s.ImageUrl')">
+                                        <div class="container-x">
+                                            <div class="hero-slide__content">
+                                                <h2>@s.Title</h2>
+                                                @if (!string.IsNullOrWhiteSpace(s.Subtitle))
+                                                {
+                                                    <p>@s.Subtitle</p>
+                                                }
+                                                @if (!string.IsNullOrWhiteSpace(s.LinkUrl))
+                                                {
+                                                    <a class="btn btn-primary btn-lg" href="@s.LinkUrl">@(s.ButtonText ?? "Shop now")</a>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        @if (Model.Slides.Count > 1)
+                        {
+                            <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span><span class="visually-hidden">Previous</span>
+                            </button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span><span class="visually-hidden">Next</span>
+                            </button>
+                        }
+                    </div>
+                </section>
+            }
+            break;
+
+        case HomeSectionKeys.FeatureStrip:
+            <div class="container-x">
+                <section class="feature-strip">
+                    @foreach (var item in Model.FeatureStripItems)
+                    {
+                        <div class="feature-strip__item">
+                            <icon name="@item.Icon" class="icon--lg" />
+                            <div><strong>@item.Title</strong><span>@item.Subtitle</span></div>
+                        </div>
+                    }
+                </section>
+            </div>
+            break;
+
+        case HomeSectionKeys.FeaturedCategories:
+            @if (Model.FeaturedCategories.Count > 0)
+            {
+                var m = Meta(key);
+                <div class="container-x">
+                    <section class="section">
+                        <div class="section-head"><div><h2>@(m?.Title ?? "Shop by category")</h2><p>@(m?.Subtitle ?? "Browse our most popular departments")</p></div></div>
+                        <div class="cat-grid">
+                            @foreach (var c in Model.FeaturedCategories)
+                            {
+                                <a class="cat-card" href="/c/@c.Slug">
+                                    <span class="cat-card__img" style="@(string.IsNullOrEmpty(c.ImageUrl) ? "" : $"background-image:url('{c.ImageUrl}')")">
+                                        @if (string.IsNullOrEmpty(c.ImageUrl)) { <span class="cat-card__initial">@c.Name[0]</span> }
+                                    </span>
+                                    <span class="cat-card__name">@c.Name</span>
+                                    <span class="cat-card__count">@c.ProductCount items</span>
+                                </a>
+                            }
+                        </div>
+                    </section>
+                </div>
+            }
+            break;
+
+        case HomeSectionKeys.Deals:
+            @if (Model.DealProducts.Count > 0)
+            {
+                var m = Meta(key);
+                <div class="container-x">
+                    <section class="section">
+                        <div class="section-head">
+                            <div>
+                                <h2>@(m?.Title ?? "Deals of the day")</h2>
+                                <p>Ends in <span class="deal-countdown" id="dealCountdown">--:--:--</span></p>
+                            </div>
+                            <a href="@(m?.LinkUrl ?? "/deals")">@(m?.ButtonText ?? "View all deals")</a>
+                        </div>
+                        <partial name="_ProductRow" model="Model.DealProducts" />
+                    </section>
+                </div>
+            }
+            break;
+
+        case HomeSectionKeys.FeaturedProducts:
+            @if (Model.FeaturedProducts.Count > 0)
+            {
+                var m = Meta(key);
+                <div class="container-x">
+                    <section class="section">
+                        <div class="section-head"><div><h2>@(m?.Title ?? "Featured products")</h2><p>@(m?.Subtitle ?? "Hand-picked favourites")</p></div><a href="@(m?.LinkUrl ?? "/search?sort=5")">@(m?.ButtonText ?? "See more")</a></div>
+                        <partial name="_ProductRow" model="Model.FeaturedProducts" />
+                    </section>
+                </div>
+            }
+            break;
+
+        case HomeSectionKeys.NewArrivals:
+            @if (Model.NewArrivals.Count > 0)
+            {
+                var m = Meta(key);
+                <div class="container-x">
+                    <section class="section">
+                        <div class="section-head"><div><h2>@(m?.Title ?? "New arrivals")</h2><p>@(m?.Subtitle ?? "Just landed in store")</p></div><a href="@(m?.LinkUrl ?? "/search?sort=3")">@(m?.ButtonText ?? "See more")</a></div>
+                        <partial name="_ProductRow" model="Model.NewArrivals" />
+                    </section>
+                </div>
+            }
+            break;
+
+        case HomeSectionKeys.PromoBanner:
+            {
+                var m = Meta(key);
+                <div class="container-x">
+                    <section class="section">
+                        <a class="promo-banner" href="@(m?.LinkUrl ?? "/deals")">
+                            <div class="promo-banner__text">
+                                <span class="promo-banner__kicker">Limited time</span>
+                                <h3>@(m?.Title ?? "Save big across every category")</h3>
+                                <p>@(m?.Subtitle ?? "Discounts refreshed daily — don't miss out.")</p>
+                                <span class="btn btn-light">@(m?.ButtonText ?? "Shop the sale")</span>
+                            </div>
+                        </a>
+                    </section>
+                </div>
+            }
+            break;
+
+        case HomeSectionKeys.BestSellers:
+            @if (Model.BestSellers.Count > 0)
+            {
+                var m = Meta(key);
+                <div class="container-x">
+                    <section class="section">
+                        <div class="section-head"><div><h2>@(m?.Title ?? "Best sellers")</h2><p>@(m?.Subtitle ?? "What everyone's buying")</p></div><a href="@(m?.LinkUrl ?? "/search?sort=5")">@(m?.ButtonText ?? "See more")</a></div>
+                        <partial name="_ProductRow" model="Model.BestSellers" />
+                    </section>
+                </div>
+            }
+            break;
+
+        case HomeSectionKeys.Testimonials:
+            @if (Model.Testimonials.Count > 0)
+            {
+                var m = Meta(key);
+                <div class="container-x">
+                    <section class="section">
+                        <div class="section-head"><div><h2>@(m?.Title ?? "What our customers say")</h2></div></div>
+                        <div class="testimonial-grid">
+                            @foreach (var t in Model.Testimonials)
+                            {
+                                <figure class="testimonial">
+                                    <partial name="_StarRating" model="new ECommerce.Web.Models.Catalog.StarRating(t.Rating, 0, false)" />
+                                    <blockquote>“@t.Message”</blockquote>
+                                    <figcaption>
+                                        <strong>@t.CustomerName</strong>
+                                        @if (!string.IsNullOrEmpty(t.Designation)) { <span>@t.Designation</span> }
+                                    </figcaption>
+                                </figure>
+                            }
+                        </div>
+                    </section>
+                </div>
+            }
+            break;
+
+        case HomeSectionKeys.Brands:
+            @if (Model.Brands.Count > 0)
+            {
+                var m = Meta(key);
+                <div class="container-x">
+                    <section class="section">
+                        <div class="section-head"><div><h2>@(m?.Title ?? "Popular brands")</h2></div></div>
+                        <div class="brand-strip">
+                            @foreach (var b in Model.Brands)
+                            {
+                                <a class="brand-chip" href="/search?q=@Uri.EscapeDataString(b.Name)">
+                                    @if (!string.IsNullOrEmpty(b.LogoUrl))
+                                    {
+                                        <img src="@b.LogoUrl" alt="@b.Name" loading="lazy" />
+                                    }
+                                    else
+                                    {
+                                        <span>@b.Name</span>
+                                    }
+                                </a>
+                            }
+                        </div>
+                    </section>
+                </div>
+            }
+            break;
+
+        case HomeSectionKeys.Newsletter:
+            {
+                var m = Meta(key);
+                <section class="newsletter-band">
+                    <div class="container-x">
+                        <div class="newsletter-band__inner">
+                            <div>
+                                <h2>@(m?.Title ?? "Join our newsletter")</h2>
+                                <p>@(m?.Subtitle ?? "Be first to hear about new arrivals, exclusive offers and sales.")</p>
+                            </div>
+                            <form data-newsletter-form method="post" action="/api/newsletter" class="newsletter-band__form">
+                                <input type="email" name="email" placeholder="Enter your email" aria-label="Email address" required />
+                                <button type="submit" class="btn btn-primary">Subscribe</button>
+                                <small data-newsletter-msg></small>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+            }
+            break;
+    }
+}
+
+@section Scripts {
+    <script>
+        (function () {
+            var el = document.getElementById('dealCountdown');
+            if (!el) return;
+            function tick() {
+                var now = new Date();
+                var end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+                var diff = Math.max(0, Math.floor((end - now) / 1000));
+                var h = String(Math.floor(diff / 3600)).padStart(2, '0');
+                var m = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
+                var s = String(diff % 60).padStart(2, '0');
+                el.textContent = h + ':' + m + ':' + s;
+            }
+            tick();
+            setInterval(tick, 1000);
+        })();
+    </script>
+}

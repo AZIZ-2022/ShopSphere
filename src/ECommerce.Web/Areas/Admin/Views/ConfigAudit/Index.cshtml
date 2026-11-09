@@ -1,0 +1,77 @@
+@using ECommerce.Application.Common.Audit
+@model ECommerce.Application.Common.Models.PagedResult<ConfigChangeLogItem>
+@{
+    var type = ViewData["Type"] as string;
+    string PageUrl(int p) => $"/Admin/ConfigAudit?page={p}" + (string.IsNullOrWhiteSpace(type) ? "" : $"&type={type}");
+
+    string Label(string entityType) => entityType switch
+    {
+        ConfigEntityTypes.SiteSetting => "Site setting",
+        ConfigEntityTypes.FeatureFlag => "Feature flag",
+        ConfigEntityTypes.Coupon => "Coupon",
+        ConfigEntityTypes.CmsPage => "Page",
+        ConfigEntityTypes.HomeSection => "Homepage section",
+        _ => entityType
+    };
+
+    string Truncate(string? s, int max = 80)
+    {
+        if (string.IsNullOrEmpty(s)) return "—";
+        return s.Length <= max ? s : s[..max] + "…";
+    }
+}
+
+<div class="admin-page-head">
+    <h1 class="text-page-title">Change history</h1>
+</div>
+
+<p class="text-muted-sm mb-3">Every change made to settings, feature flags, coupons, pages, and homepage sections. Roll back a change to restore its previous value.</p>
+
+<form method="get" class="admin-search">
+    <select name="type" class="form-select" style="max-width:220px" onchange="this.form.submit()">
+        <option value="">All types</option>
+        @foreach (var t in new[] { ConfigEntityTypes.SiteSetting, ConfigEntityTypes.FeatureFlag, ConfigEntityTypes.Coupon, ConfigEntityTypes.CmsPage, ConfigEntityTypes.HomeSection })
+        {
+            <option value="@t" selected="@(type == t)">@Label(t)</option>
+        }
+    </select>
+</form>
+
+<div class="panel p-0">
+    <table class="admin-table">
+        <thead><tr><th>When</th><th>Type</th><th>Key</th><th>Before</th><th>After</th><th>By</th><th class="actions"></th></tr></thead>
+        <tbody>
+        @if (Model.TotalCount == 0)
+        {
+            <tr><td colspan="7"><div class="empty-state-cell"><icon name="check" class="icon--lg" /><span>No changes recorded yet.</span></div></td></tr>
+        }
+        @foreach (var log in Model.Items)
+        {
+            <tr>
+                <td class="text-muted small">@log.CreatedAt.ToString("MMM d, yyyy HH:mm")</td>
+                <td><span class="chip-flag">@Label(log.EntityType)</span></td>
+                <td class="text-muted small">@log.EntityKey</td>
+                <td class="text-muted small" style="max-width:220px">@Truncate(log.OldValueJson)</td>
+                <td class="text-muted small" style="max-width:220px">@Truncate(log.NewValueJson)</td>
+                <td class="text-muted small">@(log.CreatedBy ?? "—")</td>
+                <td class="actions">
+                    @if (log.CanRollback)
+                    {
+                        <form asp-action="Rollback" asp-route-id="@log.Id" asp-route-type="@type" method="post" class="d-inline"
+                              onsubmit="return confirm('Roll this back to its previous value?');">
+                            @Html.AntiForgeryToken()
+                            <button class="btn btn-ghost btn-sm" type="submit"><icon name="undo" class="icon--sm" /> Rollback</button>
+                        </form>
+                    }
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+@if (Model.TotalPages > 1)
+{
+    <partial name="~/Views/Shared/_Pagination.cshtml"
+             model="@(new ECommerce.Web.Models.Catalog.PagerModel(Model.Page, Model.TotalPages, PageUrl))" />
+}

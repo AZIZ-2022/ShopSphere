@@ -1,0 +1,82 @@
+@model ECommerce.Application.Common.Models.PagedResult<ECommerce.Application.Admin.AdminUserListItem>
+@{
+    var search = ViewData["Search"] as string;
+    var role = ViewData["Role"] as string;
+    string PageUrl(int p)
+    {
+        var qs = $"page={p}";
+        if (!string.IsNullOrWhiteSpace(search)) qs += $"&q={Uri.EscapeDataString(search)}";
+        if (!string.IsNullOrWhiteSpace(role)) qs += $"&role={role}";
+        return $"/Admin/Users?{qs}";
+    }
+}
+
+<div class="admin-page-head">
+    <h1 class="text-page-title">Users <span class="text-muted-sm">(@Model.TotalCount)</span></h1>
+</div>
+
+<form method="get" class="admin-search">
+    <input type="search" name="q" value="@search" placeholder="Name or email…" class="form-control" />
+    <select name="role" class="form-select" style="max-width:160px">
+        <option value="">All roles</option>
+        <option value="Admin" selected="@(role == "Admin")">Admins</option>
+        <option value="Customer" selected="@(role == "Customer")">Customers</option>
+    </select>
+    <button class="btn btn-ghost" type="submit"><icon name="search" class="icon--sm" /> Filter</button>
+    @if (!string.IsNullOrWhiteSpace(search) || !string.IsNullOrWhiteSpace(role))
+    {
+        <a class="btn btn-ghost" asp-action="Index"><icon name="close" class="icon--sm" /> Clear</a>
+    }
+</form>
+
+<div class="panel p-0">
+    <table class="admin-table">
+        <thead><tr><th>Name</th><th>Email</th><th class="num">Orders</th><th>Joined</th><th>Role</th><th>Status</th><th class="actions"></th></tr></thead>
+        <tbody>
+        @if (Model.TotalCount == 0)
+        {
+            <tr><td colspan="7"><div class="empty-state-cell"><icon name="users" class="icon--lg" /><span>No users found.</span></div></td></tr>
+        }
+        @foreach (var u in Model.Items)
+        {
+            <tr>
+                <td><strong>@u.FullName</strong>@if (!string.IsNullOrEmpty(u.PhoneNumber)) { <br /><span class="text-muted small">@u.PhoneNumber</span> }</td>
+                <td>@u.Email</td>
+                <td class="num">@u.OrderCount</td>
+                <td class="text-muted">@u.CreatedAt.ToString("MMM d, yyyy")</td>
+                <td>
+                    @if (u.IsAdmin)
+                    {
+                        <span class="chip-flag">Admin</span>
+                    }
+                    else
+                    {
+                        <span class="text-muted small">Customer</span>
+                    }
+                </td>
+                <td>@if (u.IsActive) { <span class="badge-status on">Active</span> } else { <span class="badge-status off">Disabled</span> }</td>
+                <td class="actions">
+                    <form asp-action="SetRole" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@u.Id" />
+                        <input type="hidden" name="admin" value="@((!u.IsAdmin).ToString().ToLower())" />
+                        <button class="btn btn-ghost btn-sm" type="submit">@(u.IsAdmin ? "Revoke admin" : "Make admin")</button>
+                    </form>
+                    <form asp-action="SetActive" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@u.Id" />
+                        <input type="hidden" name="active" value="@((!u.IsActive).ToString().ToLower())" />
+                        <button class="btn @(u.IsActive ? "btn-danger-ghost" : "btn-ghost") btn-sm" type="submit">@(u.IsActive ? "Deactivate" : "Activate")</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+@if (Model.TotalPages > 1)
+{
+    <partial name="~/Views/Shared/_Pagination.cshtml"
+             model="@(new ECommerce.Web.Models.Catalog.PagerModel(Model.Page, Model.TotalPages, PageUrl))" />
+}

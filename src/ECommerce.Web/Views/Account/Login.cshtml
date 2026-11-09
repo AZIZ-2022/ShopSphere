@@ -1,0 +1,47 @@
+@model ECommerce.Web.Models.Account.LoginViewModel
+@{
+    ViewData["Title"] = "Log in";
+}
+
+<div class="page">
+    <div class="container-x auth-wrap">
+        <div class="auth-card">
+            <h1>Welcome back</h1>
+            <p class="lede">Log in to your account to continue.</p>
+
+            <form asp-action="Login" method="post">
+                <input type="hidden" asp-for="ReturnUrl" />
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 px-3 small" role="alert"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-control" autocomplete="username" autofocus />
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-2">
+                    <label asp-for="Password" class="form-label"></label>
+                    <input asp-for="Password" class="form-control" autocomplete="current-password" />
+                    <span asp-validation-for="Password" class="text-danger small"></span>
+                </div>
+
+                <div class="auth-meta">
+                    <div class="form-check">
+                        <input asp-for="RememberMe" class="form-check-input" />
+                        <label asp-for="RememberMe" class="form-check-label small"></label>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">Log in</button>
+            </form>
+
+            <p class="auth-alt">
+                New here? <a asp-action="Register" asp-route-returnUrl="@Model.ReturnUrl">Create an account</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

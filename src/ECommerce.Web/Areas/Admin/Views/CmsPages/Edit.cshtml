@@ -1,0 +1,52 @@
+@model ECommerce.Application.Cms.CmsPageEditModel
+
+<div class="admin-page-head">
+    <h1 class="text-page-title">@Model.Label</h1>
+    <a class="btn btn-ghost" href="/@Model.Slug" target="_blank"><icon name="external-link" class="icon--sm" /> View page</a>
+</div>
+
+<form asp-action="Edit" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="Slug" />
+    <input type="hidden" asp-for="Label" />
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="panel">
+                <p class="text-eyebrow mb-3">Content</p>
+                <div class="mb-3">
+                    <label class="form-label">Page title <span class="required-mark">*</span></label>
+                    <input asp-for="Title" class="form-control" maxlength="200" />
+                    <span asp-validation-for="Title" class="text-danger small"></span>
+                </div>
+                <div class="mb-0">
+                    <label class="form-label">Body <span class="text-muted">(HTML allowed)</span></label>
+                    <textarea asp-for="BodyHtml" class="form-control" rows="16" style="font-family:monospace;font-size:.85rem;"></textarea>
+                    <p class="field-hint">This is rendered as-is on the public page — use plain HTML tags (h2, p, ul/li, a, etc.).</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="panel">
+                <p class="text-eyebrow mb-3">SEO</p>
+                <div class="mb-3">
+                    <label class="form-label">Meta title <span class="text-muted">(optional)</span></label>
+                    <input asp-for="MetaTitle" class="form-control" maxlength="200" placeholder="@Model.Title" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Meta description <span class="text-muted">(optional)</span></label>
+                    <textarea asp-for="MetaDescription" class="form-control" rows="3" maxlength="300"></textarea>
+                </div>
+                <div class="form-check">
+                    <input asp-for="IsPublished" class="form-check-input" />
+                    <label asp-for="IsPublished" class="form-check-label">Published</label>
+                </div>
+            </div>
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary"><icon name="save" class="icon--sm" /> Save</button>
+                <a class="btn btn-ghost" asp-action="Index"><icon name="close" class="icon--sm" /> Cancel</a>
+            </div>
+        </div>
+    </div>
+</form>
